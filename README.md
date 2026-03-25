@@ -15,7 +15,7 @@ json.
 
 ## Demo
 
-👉 [Live-Version auf GitHub Pages](https://mtedaldi.github.io/chatgpt-conversion-exporter/)
+👉 [Live-Version auf GitHub Pages](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
 
 ## Usage
 - Just download the index.html and open it in any browser that supports JS
