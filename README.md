@@ -13,6 +13,10 @@ this handy little tool comes in. It alows you to search for conversatiotions
 that contain specific words, select them and export them either as markdown or
 json.
 
+## Demo
+
+👉 [Live-Version auf GitHub Pages](https://mtedaldi.github.io/chatgpt-conversion-exporter/)
+
 ## Usage
 - Just download the index.html and open it in any browser that supports JS
 - Use the tool
