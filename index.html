@@ -1,0 +1,365 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+#app { padding: 1rem 0; }
+.zone { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 2rem; text-align: center; cursor: pointer; transition: background 0.15s; }
+.zone:hover { background: var(--color-background-secondary); }
+.zone.drag { background: var(--color-background-info); border-color: #378ADD; }
+.zone p { font-size: 14px; color: var(--color-text-secondary); margin-top: 8px; }
+.zone label { font-size: 15px; font-weight: 500; color: var(--color-text-primary); cursor: pointer; }
+#file-input { display: none; }
+#controls { display: flex; gap: 8px; margin: 1rem 0; }
+#controls input[type=text] { flex: 1; }
+#controls select { width: 140px; }
+#stats { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 0.75rem; }
+#list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.conv-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; background: var(--color-background-primary); }
+.conv-item:hover { background: var(--color-background-secondary); }
+.conv-item.selected { border: 1.5px solid #378ADD; background: var(--color-background-info); }
+.conv-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; }
+.conv-meta { flex: 1; min-width: 0; }
+.conv-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-date { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.conv-snippet { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#actions { display: flex; gap: 8px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+#sel-count { font-size: 13px; color: var(--color-text-secondary); flex: 1; }
+.btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border: none; border-radius: var(--border-radius-md); padding: 8px 16px; font-size: 14px; cursor: pointer; }
+.btn-primary:disabled { opacity: 0.4; cursor: default; }
+.btn-sec { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 14px; font-size: 14px; cursor: pointer; color: var(--color-text-primary); }
+.btn-sec:hover { background: var(--color-background-secondary); }
+mark { background: #FAC775; color: #633806; border-radius: 2px; padding: 0 1px; }
+#loading { font-size: 13px; color: var(--color-text-secondary); padding: 1rem; text-align: center; }
+.files-loaded { font-size: 13px; color: var(--color-text-secondary); margin: 0.5rem 0 0; text-align: center; }
+</style>
+
+<div id="app">
+  <div id="upload-area">
+    <div class="zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".json" multiple>
+      <label for="file-input">JSON-Dateien auswählen</label>
+      <p>oder hierhin ziehen — conversations-000.json, -001.json usw.</p>
+    </div>
+    <p id="file-status" class="files-loaded" style="display:none;"></p>
+  </div>
+
+  <div id="main" style="display:none; margin-top: 1rem;">
+    <div id="controls">
+      <input type="text" id="search" placeholder="Titel oder Inhalt durchsuchen…" oninput="filterList()">
+      <select id="sort" onchange="filterList()">
+        <option value="date-desc">Neueste zuerst</option>
+        <option value="date-asc">Älteste zuerst</option>
+        <option value="alpha">A–Z</option>
+        <option value="msgs">Meiste Nachrichten</option>
+      </select>
+    </div>
+    <div id="stats"></div>
+    <div id="list"></div>
+    <div id="actions">
+      <span id="sel-count">0 ausgewählt</span>
+      <button class="btn-sec" onclick="selectAll()">Alle auswählen</button>
+      <button class="btn-sec" onclick="selectNone()">Auswahl aufheben</button>
+      <button class="btn-primary" id="export-btn" onclick="exportSelected()" disabled>Als Markdown exportieren</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allConversations = [];
+let filtered = [];
+let selected = new Set();
+
+function extractMessages(conv) {
+  const msgs = [];
+  if (!conv.mapping) return msgs;
+  const nodes = Object.values(conv.mapping);
+  nodes.sort((a,b) => {
+    const ta = a.message?.create_time || 0;
+    const tb = b.message?.create_time || 0;
+    return ta - tb;
+  });
+  for (const node of nodes) {
+    const m = node.message;
+    if (!m || !m.content) continue;
+    const role = m.author?.role;
+    if (!role || role === 'system') continue;
+    let text = '';
+    if (typeof m.content === 'string') text = m.content;
+    else if (Array.isArray(m.content.parts)) text = m.content.parts.filter(p=>typeof p==='string').join('\n');
+    else if (typeof m.content.text === 'string') text = m.content.text;
+    if (text.trim()) msgs.push({ role, text: text.trim(), time: m.create_time });
+  }
+  return msgs;
+}
+
+function snippet(conv) {
+  const msgs = extractMessages(conv);
+  for (const m of msgs) {
+    if (m.role === 'user') return m.text.substring(0, 120);
+  }
+  return '';
+}
+
+function msgCount(conv) {
+  return extractMessages(conv).length;
+}
+
+function fmtDate(ts) {
+  if (!ts) return '';
+  return new Date(ts * 1000).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function highlight(text, query) {
+  if (!query) return escHtml(text);
+  const esc = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return escHtml(text).replace(new RegExp(`(${esc})`, 'gi'), '<mark>$1</mark>');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function filterList() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const sort = document.getElementById('sort').value;
+
+  filtered = allConversations.filter(c => {
+    if (!q) return true;
+    const title = (c.title||'').toLowerCase();
+    if (title.includes(q)) return true;
+    const msgs = extractMessages(c);
+    return msgs.some(m => m.text.toLowerCase().includes(q));
+  });
+
+  if (sort === 'date-desc') filtered.sort((a,b)=>(b.create_time||0)-(a.create_time||0));
+  else if (sort === 'date-asc') filtered.sort((a,b)=>(a.create_time||0)-(b.create_time||0));
+  else if (sort === 'alpha') filtered.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+  else if (sort === 'msgs') filtered.sort((a,b)=>msgCount(b)-msgCount(a));
+
+  const q_orig = document.getElementById('search').value.trim();
+  document.getElementById('stats').textContent = `${filtered.length} von ${allConversations.length} Konversationen`;
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  for (const c of filtered) {
+    const id = c.id;
+    const isSelected = selected.has(id);
+    const title = c.title || '(kein Titel)';
+    const snip = snippet(c);
+    const div = document.createElement('div');
+    div.className = 'conv-item' + (isSelected ? ' selected' : '');
+    div.dataset.id = id;
+    div.innerHTML = `<input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelect('${id}', this.checked)" onclick="event.stopPropagation()">
+      <div class="conv-meta">
+        <div class="conv-title">${highlight(title, q_orig)}</div>
+        <div class="conv-date">${fmtDate(c.create_time)} · ${msgCount(c)} Nachrichten</div>
+        ${snip ? `<div class="conv-snippet">${highlight(snip, q_orig)}</div>` : ''}
+      </div>`;
+    div.addEventListener('click', () => {
+      const cb = div.querySelector('input[type=checkbox]');
+      cb.checked = !cb.checked;
+      toggleSelect(id, cb.checked);
+    });
+    list.appendChild(div);
+  }
+  updateActions();
+}
+
+function toggleSelect(id, val) {
+  if (val) selected.add(id); else selected.delete(id);
+  const item = document.querySelector(`.conv-item[data-id="${id}"]`);
+  if (item) item.classList.toggle('selected', val);
+  updateActions();
+}
+
+function updateActions() {
+  document.getElementById('sel-count').textContent = `${selected.size} ausgewählt`;
+  document.getElementById('export-btn').disabled = selected.size === 0;
+}
+
+function selectAll() {
+  for (const c of filtered) selected.add(c.id);
+  filterList();
+}
+
+function selectNone() {
+  selected.clear();
+  filterList();
+}
+
+function toMarkdown(conv) {
+  const msgs = extractMessages(conv);
+  const lines = [];
+  const title = conv.title || '(kein Titel)';
+  lines.push(`# ${title}`);
+  lines.push('');
+  if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
+  lines.push(`Nachrichten: ${msgs.length}`);
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+  for (const m of msgs) {
+    const label = m.role === 'user' ? '**Du**' : '**ChatGPT**';
+    lines.push(`${label}`);
+    lines.push('');
+    lines.push(m.text);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,60) || 'konversation';
+}
+
+function exportSelected() {
+  const toExport = allConversations.filter(c => selected.has(c.id));
+  if (toExport.length === 1) {
+    const c = toExport[0];
+    download(slugify(c.title||'konversation')+'.md', toMarkdown(c));
+  } else {
+    const zip = buildZip(toExport);
+    downloadBlob(zip, 'konversationen.zip', 'application/zip');
+  }
+}
+
+function download(filename, text) {
+  const a = document.createElement('a');
+  a.href = 'data:text/markdown;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename;
+  a.click();
+}
+
+function buildZip(convs) {
+  const files = convs.map(c => ({
+    name: slugify(c.title||'konversation')+'.md',
+    data: toMarkdown(c)
+  }));
+  const usedNames = {};
+  for (const f of files) {
+    usedNames[f.name] = (usedNames[f.name]||0)+1;
+  }
+  const counts = {};
+  const deduped = files.map(f => {
+    counts[f.name] = (counts[f.name]||0)+1;
+    if (usedNames[f.name] > 1) {
+      const base = f.name.replace(/\.md$/,'');
+      return {...f, name: `${base}-${counts[f.name]}.md`};
+    }
+    return f;
+  });
+
+  const parts = [];
+  const crc32 = (data) => {
+    let c = 0xFFFFFFFF;
+    for (let i=0;i<data.length;i++){c=((c>>>8)^crcTable[(c^data[i])&0xFF])>>>0;}
+    return (c^0xFFFFFFFF)>>>0;
+  };
+  const crcTable = (() => {
+    const t=new Uint32Array(256);
+    for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c;}
+    return t;
+  })();
+  const enc = new TextEncoder();
+  const u32le=(n)=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
+  const u16le=(n)=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
+
+  const centralDir = [];
+  let offset = 0;
+
+  for (const f of deduped) {
+    const nameBytes = enc.encode(f.name);
+    const dataBytes = enc.encode(f.data);
+    const crc = crc32(dataBytes);
+    const localHeader = concatBytes([
+      new Uint8Array([0x50,0x4B,0x03,0x04]),
+      u16le(20), u16le(0), u16le(0),
+      u16le(0), u16le(0),
+      u32le(crc), u32le(dataBytes.length), u32le(dataBytes.length),
+      u16le(nameBytes.length), u16le(0),
+      nameBytes
+    ]);
+    const cdRecord = concatBytes([
+      new Uint8Array([0x50,0x4B,0x01,0x02]),
+      u16le(20), u16le(20), u16le(0), u16le(0),
+      u16le(0), u16le(0),
+      u32le(crc), u32le(dataBytes.length), u32le(dataBytes.length),
+      u16le(nameBytes.length), u16le(0), u16le(0),
+      u16le(0), u16le(0), u32le(0), u32le(offset),
+      nameBytes
+    ]);
+    centralDir.push(cdRecord);
+    parts.push(localHeader, dataBytes);
+    offset += localHeader.length + dataBytes.length;
+  }
+
+  const cdData = concatBytes(centralDir);
+  const eocd = concatBytes([
+    new Uint8Array([0x50,0x4B,0x05,0x06]),
+    u16le(0), u16le(0),
+    u16le(deduped.length), u16le(deduped.length),
+    u32le(cdData.length), u32le(offset),
+    u16le(0)
+  ]);
+  return concatBytes([...parts, cdData, eocd]);
+}
+
+function concatBytes(arrays) {
+  const total = arrays.reduce((s,a)=>s+a.length,0);
+  const out = new Uint8Array(total);
+  let i=0;
+  for (const a of arrays){out.set(a,i);i+=a.length;}
+  return out;
+}
+
+function downloadBlob(data, filename, mime) {
+  const blob = new Blob([data], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function loadFiles(files) {
+  if (!files.length) return;
+  const status = document.getElementById('file-status');
+  status.style.display = 'block';
+  status.textContent = 'Wird geladen…';
+  let loaded = 0;
+  let newConvs = [];
+  Array.from(files).forEach(file => {
+    const r = new FileReader();
+    r.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (Array.isArray(data)) newConvs = newConvs.concat(data);
+        else if (data.conversations) newConvs = newConvs.concat(data.conversations);
+      } catch(ex) {}
+      loaded++;
+      if (loaded === files.length) finalize(newConvs, files);
+    };
+    r.readAsText(file);
+  });
+}
+
+function finalize(newConvs, files) {
+  const ids = new Set(allConversations.map(c=>c.id));
+  for (const c of newConvs) if (!ids.has(c.id)) allConversations.push(c);
+  const status = document.getElementById('file-status');
+  status.textContent = `${files.length} Datei(en) geladen · ${allConversations.length} Konversationen insgesamt`;
+  document.getElementById('main').style.display = 'block';
+  filterList();
+}
+
+document.getElementById('file-input').addEventListener('change', e => loadFiles(e.target.files));
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault(); dz.classList.remove('drag');
+  loadFiles(e.dataTransfer.files);
+});
+</script>
