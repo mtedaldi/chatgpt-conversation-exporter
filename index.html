@@ -1,278 +1,572 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT Conversation Exporter</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-sans); }
-#app { padding: 1rem 0; }
-.zone { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 2rem; text-align: center; cursor: pointer; transition: background 0.15s; }
-.zone:hover { background: var(--color-background-secondary); }
-.zone.drag { background: var(--color-background-info); border-color: #378ADD; }
-.zone p { font-size: 14px; color: var(--color-text-secondary); margin-top: 8px; }
-.zone label { font-size: 15px; font-weight: 500; color: var(--color-text-primary); cursor: pointer; }
-#file-input { display: none; }
-#controls { display: flex; gap: 8px; margin: 1rem 0; }
-#controls input[type=text] { flex: 1; }
-#controls select { width: 140px; }
-#stats { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 0.75rem; }
-#list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
-.conv-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; background: var(--color-background-primary); }
-.conv-item:hover { background: var(--color-background-secondary); }
-.conv-item.selected { border: 1.5px solid #378ADD; background: var(--color-background-info); }
-.conv-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; }
-.conv-meta { flex: 1; min-width: 0; }
-.conv-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conv-date { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
-.conv-snippet { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#actions { display: flex; gap: 8px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
-#sel-count { font-size: 13px; color: var(--color-text-secondary); flex: 1; }
-.btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border: none; border-radius: var(--border-radius-md); padding: 8px 16px; font-size: 14px; cursor: pointer; }
-.btn-primary:disabled { opacity: 0.4; cursor: default; }
-.btn-sec { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 14px; font-size: 14px; cursor: pointer; color: var(--color-text-primary); }
-.btn-sec:hover { background: var(--color-background-secondary); }
-mark { background: #FAC775; color: #633806; border-radius: 2px; padding: 0 1px; }
-.files-loaded { font-size: 13px; color: var(--color-text-secondary); margin: 0.5rem 0 0; text-align: center; }
-.export-group { display: flex; gap: 6px; }
-</style>
+    :root {
+      --bg:        #f7f6f3;
+      --surface:   #ffffff;
+      --border:    #e2e0da;
+      --border-md: #c8c5bc;
+      --text:      #1a1916;
+      --text-muted:#706e68;
+      --text-hint: #a09e98;
+      --accent:    #1a6aff;
+      --accent-bg: #eef3ff;
+      --mark-bg:   #ffe066;
+      --mark-text: #4a3800;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --font-ui:   'DM Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    }
 
-<div id="app">
-  <div id="upload-area">
-    <div class="zone" id="drop-zone">
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:        #18171a;
+        --surface:   #222126;
+        --border:    #333138;
+        --border-md: #4a4850;
+        --text:      #f0eee8;
+        --text-muted:#9a9890;
+        --text-hint: #6a6860;
+        --accent:    #4d8fff;
+        --accent-bg: #1a2540;
+        --mark-bg:   #7a6000;
+        --mark-text: #ffe066;
+      }
+    }
+
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    header p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 1.5px dashed var(--border-md);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      background: var(--surface);
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      background: var(--accent-bg);
+      border-color: var(--accent);
+    }
+
+    .drop-zone input[type="file"] { display: none; }
+
+    .drop-zone-label {
+      display: inline-block;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .drop-zone-hint {
+      font-size: 0.8125rem;
+      color: var(--text-hint);
+      margin-top: 0.5rem;
+    }
+
+    .file-status {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.75rem;
+      min-height: 1.25rem;
+    }
+
+    /* Controls */
+    #main { display: none; margin-top: 1.5rem; }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0.75rem;
+    }
+
+    .controls input[type="text"] {
+      flex: 1;
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .controls input[type="text"]:focus { border-color: var(--accent); }
+
+    .controls select {
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 0.8125rem;
+      outline: none;
+      cursor: pointer;
+      min-width: 150px;
+    }
+
+    .stats {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 0.625rem;
+    }
+
+    /* List */
+    #list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 440px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    #list::-webkit-scrollbar { width: 4px; }
+    #list::-webkit-scrollbar-track { background: transparent; }
+    #list::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
+
+    .conv-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      background: var(--surface);
+      transition: background 0.1s, border-color 0.1s;
+      user-select: none;
+    }
+
+    .conv-item:hover { background: var(--accent-bg); border-color: var(--border-md); }
+
+    .conv-item.selected {
+      border: 1.5px solid var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .conv-item input[type="checkbox"] {
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .conv-meta { flex: 1; min-width: 0; }
+
+    .conv-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    .conv-snippet {
+      font-size: 0.75rem;
+      color: var(--text-hint);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    mark {
+      background: var(--mark-bg);
+      color: var(--mark-text);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #sel-count {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-ui);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.12s, opacity 0.12s;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-md);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover { background: var(--accent-bg); }
+
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+    }
+
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.38; cursor: default; }
+
+    .export-group { display: flex; gap: 6px; }
+
+    footer {
+      margin-top: 3rem;
+      font-size: 0.75rem;
+      color: var(--text-hint);
+      text-align: center;
+    }
+
+    footer a { color: var(--text-hint); text-decoration: underline; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ChatGPT Conversation Exporter</h1>
+      <p>Konversationen durchsuchen, auswählen und als Markdown oder JSON exportieren</p>
+    </header>
+
+    <div class="drop-zone" id="drop-zone">
       <input type="file" id="file-input" accept=".json" multiple>
-      <label for="file-input">JSON-Dateien auswählen</label>
-      <p>oder hierhin ziehen — conversations-000.json, -001.json usw.</p>
+      <label class="drop-zone-label" for="file-input">JSON-Dateien auswählen</label>
+      <p class="drop-zone-hint">oder hierhin ziehen — conversations-000.json, -001.json&nbsp;usw.</p>
     </div>
-    <p id="file-status" class="files-loaded" style="display:none;"></p>
-  </div>
+    <p class="file-status" id="file-status"></p>
 
-  <div id="main" style="display:none; margin-top: 1rem;">
-    <div id="controls">
-      <input type="text" id="search" placeholder="Titel oder Inhalt durchsuchen…" oninput="filterList()">
-      <select id="sort" onchange="filterList()">
-        <option value="date-desc">Neueste zuerst</option>
-        <option value="date-asc">Älteste zuerst</option>
-        <option value="alpha">A–Z</option>
-        <option value="msgs">Meiste Nachrichten</option>
-      </select>
-    </div>
-    <div id="stats"></div>
-    <div id="list"></div>
-    <div id="actions">
-      <span id="sel-count">0 ausgewählt</span>
-      <button class="btn-sec" onclick="selectAll()">Alle auswählen</button>
-      <button class="btn-sec" onclick="selectNone()">Auswahl aufheben</button>
-      <div class="export-group">
-        <button class="btn-primary" id="export-md-btn" onclick="exportSelected('md')" disabled>↓ Markdown</button>
-        <button class="btn-primary" id="export-json-btn" onclick="exportSelected('json')" disabled>↓ JSON</button>
+    <div id="main">
+      <div class="controls">
+        <input type="text" id="search" placeholder="Titel oder Inhalt durchsuchen…" oninput="filterList()">
+        <select id="sort" onchange="filterList()">
+          <option value="date-desc">Neueste zuerst</option>
+          <option value="date-asc">Älteste zuerst</option>
+          <option value="alpha">A – Z</option>
+          <option value="msgs">Meiste Nachrichten</option>
+        </select>
+      </div>
+      <p class="stats" id="stats"></p>
+      <div id="list"></div>
+      <div class="actions">
+        <span id="sel-count">0 ausgewählt</span>
+        <button class="btn btn-ghost" onclick="selectAll()">Alle auswählen</button>
+        <button class="btn btn-ghost" onclick="selectNone()">Auswahl aufheben</button>
+        <div class="export-group">
+          <button class="btn btn-primary" id="export-md-btn" onclick="exportSelected('md')" disabled>↓ Markdown</button>
+          <button class="btn btn-primary" id="export-json-btn" onclick="exportSelected('json')" disabled>↓ JSON</button>
+        </div>
       </div>
     </div>
+
+    <footer>
+      Alle Daten bleiben lokal im Browser &mdash; nichts wird hochgeladen. &nbsp;|&nbsp;
+      <a href="https://github.com/mtedaldi/chatgpt-conversation-exporter" target="_blank" rel="noopener">GitHub</a>
+      &nbsp;|&nbsp; MIT License
+    </footer>
   </div>
-</div>
 
-<script>
-let allConversations = [];
-let filtered = [];
-let selected = new Set();
+  <script>
+    let allConversations = [];
+    let filtered = [];
+    let selected = new Set();
 
-function extractMessages(conv) {
-  const msgs = [];
-  if (!conv.mapping) return msgs;
-  const nodes = Object.values(conv.mapping);
-  nodes.sort((a,b) => (a.message?.create_time||0)-(b.message?.create_time||0));
-  for (const node of nodes) {
-    const m = node.message;
-    if (!m || !m.content) continue;
-    const role = m.author?.role;
-    if (!role || role === 'system') continue;
-    let text = '';
-    if (typeof m.content === 'string') text = m.content;
-    else if (Array.isArray(m.content.parts)) text = m.content.parts.filter(p=>typeof p==='string').join('\n');
-    else if (typeof m.content.text === 'string') text = m.content.text;
-    if (text.trim()) msgs.push({ role, text: text.trim(), time: m.create_time });
-  }
-  return msgs;
-}
-
-function snippet(conv) {
-  for (const m of extractMessages(conv)) if (m.role==='user') return m.text.substring(0,120);
-  return '';
-}
-
-function msgCount(conv) { return extractMessages(conv).length; }
-
-function fmtDate(ts) {
-  if (!ts) return '';
-  return new Date(ts*1000).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'});
-}
-
-function highlight(text, query) {
-  if (!query) return escHtml(text);
-  const esc = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return escHtml(text).replace(new RegExp(`(${esc})`,'gi'),'<mark>$1</mark>');
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function filterList() {
-  const q = document.getElementById('search').value.toLowerCase().trim();
-  const sort = document.getElementById('sort').value;
-  filtered = allConversations.filter(c => {
-    if (!q) return true;
-    if ((c.title||'').toLowerCase().includes(q)) return true;
-    return extractMessages(c).some(m=>m.text.toLowerCase().includes(q));
-  });
-  if (sort==='date-desc') filtered.sort((a,b)=>(b.create_time||0)-(a.create_time||0));
-  else if (sort==='date-asc') filtered.sort((a,b)=>(a.create_time||0)-(b.create_time||0));
-  else if (sort==='alpha') filtered.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
-  else if (sort==='msgs') filtered.sort((a,b)=>msgCount(b)-msgCount(a));
-  const q_orig = document.getElementById('search').value.trim();
-  document.getElementById('stats').textContent = `${filtered.length} von ${allConversations.length} Konversationen`;
-  const list = document.getElementById('list');
-  list.innerHTML = '';
-  for (const c of filtered) {
-    const id = c.id;
-    const isSelected = selected.has(id);
-    const title = c.title||'(kein Titel)';
-    const snip = snippet(c);
-    const div = document.createElement('div');
-    div.className = 'conv-item'+(isSelected?' selected':'');
-    div.dataset.id = id;
-    div.innerHTML = `<input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelect('${id}',this.checked)" onclick="event.stopPropagation()">
-      <div class="conv-meta">
-        <div class="conv-title">${highlight(title,q_orig)}</div>
-        <div class="conv-date">${fmtDate(c.create_time)} · ${msgCount(c)} Nachrichten</div>
-        ${snip?`<div class="conv-snippet">${highlight(snip,q_orig)}</div>`:''}
-      </div>`;
-    div.addEventListener('click',()=>{const cb=div.querySelector('input[type=checkbox]');cb.checked=!cb.checked;toggleSelect(id,cb.checked);});
-    list.appendChild(div);
-  }
-  updateActions();
-}
-
-function toggleSelect(id, val) {
-  if (val) selected.add(id); else selected.delete(id);
-  const item = document.querySelector(`.conv-item[data-id="${id}"]`);
-  if (item) item.classList.toggle('selected', val);
-  updateActions();
-}
-
-function updateActions() {
-  const n = selected.size;
-  document.getElementById('sel-count').textContent = `${n} ausgewählt`;
-  document.getElementById('export-md-btn').disabled = n===0;
-  document.getElementById('export-json-btn').disabled = n===0;
-}
-
-function selectAll() { for (const c of filtered) selected.add(c.id); filterList(); }
-function selectNone() { selected.clear(); filterList(); }
-
-function slugify(s) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,60)||'konversation';
-}
-
-function toMarkdown(conv) {
-  const msgs = extractMessages(conv);
-  const lines = [];
-  lines.push(`# ${conv.title||'(kein Titel)'}`,'');
-  if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
-  lines.push(`Nachrichten: ${msgs.length}`,'','---','');
-  for (const m of msgs) {
-    lines.push(m.role==='user'?'**Du**':'**ChatGPT**','',m.text,'','---','');
-  }
-  return lines.join('\n');
-}
-
-function toCleanJson(conv) {
-  const msgs = extractMessages(conv);
-  return {
-    id: conv.id,
-    title: conv.title||'(kein Titel)',
-    create_time: conv.create_time||null,
-    update_time: conv.update_time||null,
-    messages: msgs.map(m=>({role: m.role, text: m.text, time: m.time||null}))
-  };
-}
-
-function exportSelected(fmt) {
-  const toExport = allConversations.filter(c=>selected.has(c.id));
-  if (toExport.length===1) {
-    const c = toExport[0];
-    const name = slugify(c.title||'konversation');
-    if (fmt==='md') download(name+'.md', toMarkdown(c), 'text/markdown');
-    else download(name+'.json', JSON.stringify(toCleanJson(c), null, 2), 'application/json');
-  } else {
-    if (fmt==='md') {
-      downloadZip(toExport.map(c=>({name:slugify(c.title||'konversation')+'.md', data:toMarkdown(c)})), 'konversationen-md.zip');
-    } else {
-      const arr = toExport.map(toCleanJson);
-      download('konversationen.json', JSON.stringify(arr, null, 2), 'application/json');
+    function extractMessages(conv) {
+      const msgs = [];
+      if (!conv.mapping) return msgs;
+      const nodes = Object.values(conv.mapping);
+      nodes.sort((a, b) => (a.message?.create_time || 0) - (b.message?.create_time || 0));
+      for (const node of nodes) {
+        const m = node.message;
+        if (!m || !m.content) continue;
+        const role = m.author?.role;
+        if (!role || role === 'system') continue;
+        let text = '';
+        if (typeof m.content === 'string') text = m.content;
+        else if (Array.isArray(m.content.parts)) text = m.content.parts.filter(p => typeof p === 'string').join('\n');
+        else if (typeof m.content.text === 'string') text = m.content.text;
+        if (text.trim()) msgs.push({ role, text: text.trim(), time: m.create_time });
+      }
+      return msgs;
     }
-  }
-}
 
-function download(filename, text, mime) {
-  const a = document.createElement('a');
-  a.href = 'data:'+mime+';charset=utf-8,'+encodeURIComponent(text);
-  a.download = filename; a.click();
-}
+    function snippet(conv) {
+      for (const m of extractMessages(conv)) if (m.role === 'user') return m.text.substring(0, 120);
+      return '';
+    }
 
-function downloadZip(files, zipname) {
-  const usedNames = {};
-  for (const f of files) usedNames[f.name]=(usedNames[f.name]||0)+1;
-  const counts={};
-  const deduped = files.map(f=>{
-    counts[f.name]=(counts[f.name]||0)+1;
-    if (usedNames[f.name]>1) return {...f,name:f.name.replace(/\.md$/,'')+'-'+counts[f.name]+'.md'};
-    return f;
-  });
-  const crcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c;}return t;})();
-  const crc32=(data)=>{let c=0xFFFFFFFF;for(let i=0;i<data.length;i++)c=((c>>>8)^crcTable[(c^data[i])&0xFF])>>>0;return(c^0xFFFFFFFF)>>>0;};
-  const enc=new TextEncoder();
-  const u32le=n=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
-  const u16le=n=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
-  const cat=arrays=>{const t=arrays.reduce((s,a)=>s+a.length,0);const o=new Uint8Array(t);let i=0;for(const a of arrays){o.set(a,i);i+=a.length;}return o;};
-  const parts=[];const cd=[];let offset=0;
-  for(const f of deduped){
-    const nb=enc.encode(f.name);const db=enc.encode(f.data);const crc=crc32(db);
-    const lh=cat([new Uint8Array([0x50,0x4B,0x03,0x04]),u16le(20),u16le(0),u16le(0),u16le(0),u16le(0),u32le(crc),u32le(db.length),u32le(db.length),u16le(nb.length),u16le(0),nb]);
-    cd.push(cat([new Uint8Array([0x50,0x4B,0x01,0x02]),u16le(20),u16le(20),u16le(0),u16le(0),u16le(0),u16le(0),u32le(crc),u32le(db.length),u32le(db.length),u16le(nb.length),u16le(0),u16le(0),u16le(0),u16le(0),u32le(0),u32le(offset),nb]));
-    parts.push(lh,db);offset+=lh.length+db.length;
-  }
-  const cdd=cat(cd);
-  const eocd=cat([new Uint8Array([0x50,0x4B,0x05,0x06]),u16le(0),u16le(0),u16le(deduped.length),u16le(deduped.length),u32le(cdd.length),u32le(offset),u16le(0)]);
-  const blob=new Blob([cat([...parts,cdd,eocd])],{type:'application/zip'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=zipname;a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+    function msgCount(conv) { return extractMessages(conv).length; }
 
-function loadFiles(files) {
-  if (!files.length) return;
-  const status=document.getElementById('file-status');
-  status.style.display='block'; status.textContent='Wird geladen…';
-  let loaded=0; let newConvs=[];
-  Array.from(files).forEach(file=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      try{const d=JSON.parse(e.target.result);if(Array.isArray(d))newConvs=newConvs.concat(d);else if(d.conversations)newConvs=newConvs.concat(d.conversations);}catch(ex){}
-      loaded++;
-      if(loaded===files.length)finalize(newConvs,files);
-    };
-    r.readAsText(file);
-  });
-}
+    function fmtDate(ts) {
+      if (!ts) return '';
+      return new Date(ts * 1000).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
 
-function finalize(newConvs, files) {
-  const ids=new Set(allConversations.map(c=>c.id));
-  for(const c of newConvs)if(!ids.has(c.id))allConversations.push(c);
-  document.getElementById('file-status').textContent=`${files.length} Datei(en) geladen · ${allConversations.length} Konversationen insgesamt`;
-  document.getElementById('main').style.display='block';
-  filterList();
-}
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
 
-document.getElementById('file-input').addEventListener('change',e=>loadFiles(e.target.files));
-const dz=document.getElementById('drop-zone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');loadFiles(e.dataTransfer.files);});
-</script>
+    function highlight(text, query) {
+      if (!query) return escHtml(text);
+      const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return escHtml(text).replace(new RegExp(`(${esc})`, 'gi'), '<mark>$1</mark>');
+    }
+
+    function filterList() {
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const sort = document.getElementById('sort').value;
+
+      filtered = allConversations.filter(c => {
+        if (!q) return true;
+        if ((c.title || '').toLowerCase().includes(q)) return true;
+        return extractMessages(c).some(m => m.text.toLowerCase().includes(q));
+      });
+
+      if (sort === 'date-desc') filtered.sort((a, b) => (b.create_time || 0) - (a.create_time || 0));
+      else if (sort === 'date-asc') filtered.sort((a, b) => (a.create_time || 0) - (b.create_time || 0));
+      else if (sort === 'alpha') filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      else if (sort === 'msgs') filtered.sort((a, b) => msgCount(b) - msgCount(a));
+
+      const qOrig = document.getElementById('search').value.trim();
+      document.getElementById('stats').textContent = `${filtered.length} von ${allConversations.length} Konversationen`;
+
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      for (const c of filtered) {
+        const id = c.id;
+        const isSelected = selected.has(id);
+        const title = c.title || '(kein Titel)';
+        const snip = snippet(c);
+        const div = document.createElement('div');
+        div.className = 'conv-item' + (isSelected ? ' selected' : '');
+        div.dataset.id = id;
+        div.innerHTML = `
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${id}', this.checked)" onclick="event.stopPropagation()">
+          <div class="conv-meta">
+            <div class="conv-title">${highlight(title, qOrig)}</div>
+            <div class="conv-date">${fmtDate(c.create_time)} &middot; ${msgCount(c)} Nachrichten</div>
+            ${snip ? `<div class="conv-snippet">${highlight(snip, qOrig)}</div>` : ''}
+          </div>`;
+        div.addEventListener('click', () => {
+          const cb = div.querySelector('input[type=checkbox]');
+          cb.checked = !cb.checked;
+          toggleSelect(id, cb.checked);
+        });
+        list.appendChild(div);
+      }
+      updateActions();
+    }
+
+    function toggleSelect(id, val) {
+      if (val) selected.add(id); else selected.delete(id);
+      const item = document.querySelector(`.conv-item[data-id="${id}"]`);
+      if (item) item.classList.toggle('selected', val);
+      updateActions();
+    }
+
+    function updateActions() {
+      const n = selected.size;
+      document.getElementById('sel-count').textContent = `${n} ausgewählt`;
+      document.getElementById('export-md-btn').disabled = n === 0;
+      document.getElementById('export-json-btn').disabled = n === 0;
+    }
+
+    function selectAll() { for (const c of filtered) selected.add(c.id); filterList(); }
+    function selectNone() { selected.clear(); filterList(); }
+
+    function slugify(s) {
+      return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 60) || 'konversation';
+    }
+
+    function toMarkdown(conv) {
+      const msgs = extractMessages(conv);
+      const lines = [];
+      lines.push(`# ${conv.title || '(kein Titel)'}`, '');
+      if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
+      lines.push(`Nachrichten: ${msgs.length}`, '', '---', '');
+      for (const m of msgs) {
+        lines.push(m.role === 'user' ? '**Du**' : '**ChatGPT**', '', m.text, '', '---', '');
+      }
+      return lines.join('\n');
+    }
+
+    function toCleanJson(conv) {
+      return {
+        id: conv.id,
+        title: conv.title || '(kein Titel)',
+        create_time: conv.create_time || null,
+        update_time: conv.update_time || null,
+        messages: extractMessages(conv).map(m => ({ role: m.role, text: m.text, time: m.time || null }))
+      };
+    }
+
+    function exportSelected(fmt) {
+      const toExport = allConversations.filter(c => selected.has(c.id));
+      if (toExport.length === 1) {
+        const c = toExport[0];
+        const name = slugify(c.title || 'konversation');
+        if (fmt === 'md') download(name + '.md', toMarkdown(c), 'text/markdown');
+        else download(name + '.json', JSON.stringify(toCleanJson(c), null, 2), 'application/json');
+      } else {
+        if (fmt === 'md') {
+          downloadZip(toExport.map(c => ({ name: slugify(c.title || 'konversation') + '.md', data: toMarkdown(c) })), 'konversationen-md.zip');
+        } else {
+          download('konversationen.json', JSON.stringify(toExport.map(toCleanJson), null, 2), 'application/json');
+        }
+      }
+    }
+
+    function download(filename, text, mime) {
+      const a = document.createElement('a');
+      a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(text);
+      a.download = filename;
+      a.click();
+    }
+
+    function downloadZip(files, zipname) {
+      const usedNames = {};
+      for (const f of files) usedNames[f.name] = (usedNames[f.name] || 0) + 1;
+      const counts = {};
+      const deduped = files.map(f => {
+        counts[f.name] = (counts[f.name] || 0) + 1;
+        if (usedNames[f.name] > 1) return { ...f, name: f.name.replace(/\.md$/, '') + '-' + counts[f.name] + '.md' };
+        return f;
+      });
+
+      const crcTable = (() => {
+        const t = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c; }
+        return t;
+      })();
+      const crc32 = data => { let c = 0xFFFFFFFF; for (let i = 0; i < data.length; i++) c = ((c >>> 8) ^ crcTable[(c ^ data[i]) & 0xFF]) >>> 0; return (c ^ 0xFFFFFFFF) >>> 0; };
+      const enc = new TextEncoder();
+      const u32le = n => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n, true); return b; };
+      const u16le = n => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, n, true); return b; };
+      const cat = arrays => { const t = arrays.reduce((s, a) => s + a.length, 0); const o = new Uint8Array(t); let i = 0; for (const a of arrays) { o.set(a, i); i += a.length; } return o; };
+
+      const parts = [], cd = [];
+      let offset = 0;
+      for (const f of deduped) {
+        const nb = enc.encode(f.name), db = enc.encode(f.data), crc = crc32(db);
+        const lh = cat([new Uint8Array([0x50, 0x4B, 0x03, 0x04]), u16le(20), u16le(0), u16le(0), u16le(0), u16le(0), u32le(crc), u32le(db.length), u32le(db.length), u16le(nb.length), u16le(0), nb]);
+        cd.push(cat([new Uint8Array([0x50, 0x4B, 0x01, 0x02]), u16le(20), u16le(20), u16le(0), u16le(0), u16le(0), u16le(0), u32le(crc), u32le(db.length), u32le(db.length), u16le(nb.length), u16le(0), u16le(0), u16le(0), u16le(0), u32le(0), u32le(offset), nb]));
+        parts.push(lh, db);
+        offset += lh.length + db.length;
+      }
+      const cdd = cat(cd);
+      const eocd = cat([new Uint8Array([0x50, 0x4B, 0x05, 0x06]), u16le(0), u16le(0), u16le(deduped.length), u16le(deduped.length), u32le(cdd.length), u32le(offset), u16le(0)]);
+      const blob = new Blob([cat([...parts, cdd, eocd])], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = zipname; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function loadFiles(files) {
+      if (!files.length) return;
+      const status = document.getElementById('file-status');
+      status.textContent = 'Wird geladen…';
+      let loaded = 0, newConvs = [];
+      Array.from(files).forEach(file => {
+        const r = new FileReader();
+        r.onload = e => {
+          try {
+            const d = JSON.parse(e.target.result);
+            if (Array.isArray(d)) newConvs = newConvs.concat(d);
+            else if (d.conversations) newConvs = newConvs.concat(d.conversations);
+          } catch (ex) { /* skip invalid files */ }
+          if (++loaded === files.length) finalize(newConvs, files);
+        };
+        r.readAsText(file);
+      });
+    }
+
+    function finalize(newConvs, files) {
+      const ids = new Set(allConversations.map(c => c.id));
+      for (const c of newConvs) if (!ids.has(c.id)) allConversations.push(c);
+      document.getElementById('file-status').textContent =
+        `${files.length} Datei(en) geladen · ${allConversations.length} Konversationen insgesamt`;
+      document.getElementById('main').style.display = 'block';
+      filterList();
+    }
+
+    document.getElementById('file-input').addEventListener('change', e => loadFiles(e.target.files));
+
+    const dz = document.getElementById('drop-zone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); loadFiles(e.dataTransfer.files); });
+  </script>
+</body>
+</html>

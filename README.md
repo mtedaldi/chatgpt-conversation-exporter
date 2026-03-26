@@ -1,29 +1,90 @@
-# ChatGPT conversation exporter
+# ChatGPT Conversation Exporter
 
-## Description
-When you export your data from ChatGPT you get a zip file with some json files 
-in it (and other stuff). 
+A lightweight, browser-based tool to search, filter, and export individual conversations from a ChatGPT data export.
 
-What's interesting for most users is probably the conversationsNNN.json (one or 
-several json files containing your conversations).
+## Background
 
-OpenAI delivers a helpful chat.html file, to read the conversations in a browser 
-window. but it lacks the ability to export specific conversations. That's where
-this handy little tool comes in. It alows you to search for conversatiotions 
-that contain specific words, select them and export them either as markdown or
-json.
+When you request a data export from ChatGPT, OpenAI delivers a ZIP archive containing (among other things) one or more `conversations-NNN.json` files and a `chat.html` viewer. The HTML viewer is handy for reading your history, but it offers no way to extract specific conversations. This tool fills that gap.
+
+## Features
+
+- **Multi-file support** — load all `conversations-*.json` files at once (drag & drop or file picker)
+- **Full-text search** — searches both conversation titles and message content, with hit highlighting
+- **Sorting** — by date (newest/oldest), alphabetically, or by message count
+- **Selective export** — pick any subset of conversations
+- **Two export formats**
+  - **Markdown** — clean, readable `.md` files; multiple conversations are bundled as a ZIP
+  - **JSON** — stripped-down, readable JSON without ChatGPT's internal mapping structure; multiple conversations are exported as a single array
+- **100 % client-side** — no server, no uploads, no tracking; your data never leaves the browser
+
+## Demo
+
+👉 [Live version on GitHub Pages](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
 
 ## Demo
 
 👉 [Live-Version auf GitHub Pages](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
 
 ## Usage
-- Just download the index.html and open it in any browser that supports JS
-- Use the tool
+
+1. Download `index.html`
+2. Open it in any modern browser (Chrome, Firefox, Safari, Edge)
+3. Select or drag your `conversations-*.json` files onto the drop zone
+4. Search or sort to find the conversations you want
+5. Check the ones you need and click **↓ Markdown** or **↓ JSON**
+
+No installation, no dependencies, no internet connection required after the initial page load (Google Fonts are loaded from CDN but are purely cosmetic — the tool works without them).
+
+## Export formats
+
+### Markdown
+Each conversation becomes a `.md` file named after its title. Messages are rendered as:
+
+```markdown
+# Conversation title
+
+Datum: 26.03.2026
+Nachrichten: 12
+
+---
+
+**Du**
+
+Your message here
+
+---
+
+**ChatGPT**
+
+The response here
+
+---
+```
+
+### JSON
+Each conversation is exported as a clean object:
+
+```json
+{
+  "id": "…",
+  "title": "…",
+  "create_time": 1700000000,
+  "update_time": 1700000001,
+  "messages": [
+    { "role": "user", "text": "…", "time": 1700000000 },
+    { "role": "assistant", "text": "…", "time": 1700000001 }
+  ]
+}
+```
+
+Multiple selected conversations are exported as a JSON array in a single file.
 
 ## Development
-This tool was develeoped with the help of claude by anthropic. Idea
-and everything was by me, code is created by AI.
+
+Developed with the assistance of [Claude](https://claude.ai) by Anthropic. The concept, requirements, and direction are by the author; the implementation was generated and iterated with AI assistance. The project is intentionally dependency-free — a single `index.html` with vanilla JS.
+
+Contributions and issues welcome via GitHub.
 
 ## License
-MIT-License
+
+[MIT](LICENSE)
