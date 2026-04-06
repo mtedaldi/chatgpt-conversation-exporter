@@ -66,11 +66,29 @@
       color: var(--text);
     }
 
+    .header-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .version-badge {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-hint);
+      background: var(--border);
+      padding: 1px 7px;
+      border-radius: 99px;
+      letter-spacing: 0.02em;
+    }
+
     header p {
       font-size: 0.875rem;
       color: var(--text-muted);
       margin-top: 0.25rem;
     }
+
+    .status-error { color: #c0392b; }
 
     /* Drop zone */
     .drop-zone {
@@ -297,7 +315,10 @@
 <body>
   <div class="container">
     <header>
-      <h1>ChatGPT Conversation Exporter</h1>
+      <div class="header-row">
+        <h1>ChatGPT Conversation Exporter</h1>
+        <span class="version-badge">v0.4.0</span>
+      </div>
       <p>Konversationen durchsuchen, auswählen und als Markdown oder JSON exportieren</p>
     </header>
 
@@ -534,70 +555,103 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    function loadFiles(files) {
-      if (!files.length) return;
-      const status = document.getElementById('file-status');
-      status.textContent = 'Wird geladen…';
+    function setStatus(text, isError) {
+      const el = document.getElementById('file-status');
+      el.textContent = text;
+      el.className = 'file-status' + (isError ? ' status-error' : '');
+    }
 
-      const jsonFiles = [], zipFiles = [];
-      Array.from(files).forEach(f => {
-        if (f.name.endsWith('.zip') || f.type === 'application/zip') zipFiles.push(f);
-        else jsonFiles.push(f);
-      });
+    function parseJsonText(text) {
+      try {
+        const d = JSON.parse(text);
+        if (Array.isArray(d)) return d;
+        if (d && Array.isArray(d.conversations)) return d.conversations;
+      } catch (ex) {}
+      return [];
+    }
 
-      const allNewConvs = [];
-      let pending = jsonFiles.length + zipFiles.length;
-      if (pending === 0) return;
-
-      function done() {
-        if (--pending === 0) finalize(allNewConvs, files);
-      }
-
-      function parseJson(text) {
-        try {
-          const d = JSON.parse(text);
-          if (Array.isArray(d)) return d;
-          if (d.conversations) return d.conversations;
-        } catch (ex) {}
-        return [];
-      }
-
-      jsonFiles.forEach(file => {
+    async function loadZip(file) {
+      return new Promise((resolve) => {
         const r = new FileReader();
-        r.onload = e => { allNewConvs.push(...parseJson(e.target.result)); done(); };
-        r.readAsText(file);
-      });
-
-      zipFiles.forEach(file => {
-        const r = new FileReader();
-        r.onload = async e => {
+        r.onerror = () => resolve({ convs: [], error: 'ZIP konnte nicht gelesen werden.' });
+        r.onload = async (e) => {
           try {
             const zip = await JSZip.loadAsync(e.target.result);
-            const convFiles = Object.keys(zip.files).filter(name =>
-              /conversations(-\d+)?\.json$/i.test(name)
-            );
-            if (convFiles.length === 0) {
-              // fallback: try all json files in the zip
-              convFiles.push(...Object.keys(zip.files).filter(n => n.endsWith('.json') && !zip.files[n].dir));
+            const allNames = Object.keys(zip.files).filter(n => !zip.files[n].dir);
+
+            // Match any JSON file whose basename contains "conversation"
+            let candidates = allNames.filter(n => /conversation/i.test(n) && n.endsWith('.json'));
+
+            // Fallback: all JSON files except known non-conversation ones
+            if (candidates.length === 0) {
+              const skip = /^(user|manifest|feedback|settings|shared)/i;
+              candidates = allNames.filter(n => n.endsWith('.json') && !skip.test(n.split('/').pop()));
             }
-            let zipPending = convFiles.length || 1;
-            if (!convFiles.length) { done(); return; }
-            for (const name of convFiles) {
+
+            if (candidates.length === 0) {
+              resolve({ convs: [], error: `ZIP geöffnet, aber keine conversations*.json gefunden. Enthaltene JSON-Dateien: ${allNames.filter(n=>n.endsWith('.json')).join(', ') || '(keine)'}` });
+              return;
+            }
+
+            let convs = [];
+            for (const name of candidates) {
               const text = await zip.files[name].async('string');
-              allNewConvs.push(...parseJson(text));
-              if (--zipPending === 0) done();
+              const parsed = parseJsonText(text);
+              convs = convs.concat(parsed);
             }
-          } catch (ex) { done(); }
+            resolve({ convs, error: null, detail: `${candidates.length} Datei(en) aus ZIP gelesen: ${candidates.map(n=>n.split('/').pop()).join(', ')}` });
+          } catch (ex) {
+            resolve({ convs: [], error: `ZIP-Fehler: ${ex.message}` });
+          }
         };
         r.readAsArrayBuffer(file);
       });
     }
 
-    function finalize(newConvs, files) {
+    async function loadFiles(files) {
+      if (!files.length) return;
+      setStatus('Wird geladen…', false);
+
+      const jsonFiles = [], zipFiles = [];
+      Array.from(files).forEach(f => {
+        if (f.name.toLowerCase().endsWith('.zip') || f.type === 'application/zip') zipFiles.push(f);
+        else jsonFiles.push(f);
+      });
+
+      let allNewConvs = [];
+      const errors = [];
+      const details = [];
+
+      // Load plain JSON files
+      for (const file of jsonFiles) {
+        await new Promise(resolve => {
+          const r = new FileReader();
+          r.onerror = () => { errors.push(`${file.name}: Lesefehler`); resolve(); };
+          r.onload = e => { allNewConvs = allNewConvs.concat(parseJsonText(e.target.result)); resolve(); };
+          r.readAsText(file);
+        });
+      }
+
+      // Load ZIP files
+      for (const file of zipFiles) {
+        const result = await loadZip(file);
+        allNewConvs = allNewConvs.concat(result.convs);
+        if (result.error) errors.push(result.error);
+        if (result.detail) details.push(result.detail);
+      }
+
+      finalize(allNewConvs, files, errors, details);
+    }
+
+    function finalize(newConvs, files, errors = [], details = []) {
       const ids = new Set(allConversations.map(c => c.id));
       for (const c of newConvs) if (!ids.has(c.id)) allConversations.push(c);
-      document.getElementById('file-status').textContent =
-        `${files.length} Datei(en) geladen · ${allConversations.length} Konversationen insgesamt`;
+
+      const countInfo = `${allConversations.length} Konversationen geladen`;
+      const detailInfo = details.length ? ` (${details.join('; ')})` : '';
+      const errorInfo = errors.length ? ` ⚠ ${errors.join(' | ')}` : '';
+
+      setStatus(countInfo + detailInfo + errorInfo, errors.length > 0);
       document.getElementById('main').style.display = 'block';
       filterList();
     }
