@@ -108,7 +108,7 @@
     <header>
       <div class="header-row">
         <h1>ChatGPT Conversation Exporter</h1>
-        <span class="version-badge">v0.5.0</span>
+        <span class="version-badge">v0.5.1</span>
       </div>
       <p>Konversationen durchsuchen, auswählen und als Markdown, JSON oder HTML (inkl. Bilder) exportieren</p>
     </header>
@@ -158,7 +158,7 @@
   </div>
 
   <script>
-    const VERSION = 'v0.5.0';
+    const VERSION = 'v0.5.1';
 
     let allConversations = [];
     let filtered        = [];
@@ -256,8 +256,13 @@
 
     function lookupImage(fileId) {
       if (!fileId) return null;
+      // 1. Exact match
       if (imageIndex[fileId]) return imageIndex[fileId];
-      // Try progressively shorter suffix matches
+      // 2. fileId is a prefix of an index key (e.g. fileId="file-abc" matches "file-abc-uuid.jpg")
+      for (const key of Object.keys(imageIndex)) {
+        if (key.startsWith(fileId) || fileId.startsWith(key)) return imageIndex[key];
+      }
+      // 3. fileId contains or is contained in key (last resort)
       for (const key of Object.keys(imageIndex)) {
         if (key.includes(fileId) || fileId.includes(key)) return imageIndex[key];
       }
@@ -575,6 +580,16 @@ ${rows}
             const zip = await JSZip.loadAsync(e.target.result);
             const allNames = Object.keys(zip.files).filter(n => !zip.files[n].dir);
 
+            // ── Read user.json to get user-ID (for generated image subfolder) ──
+            let userId = null;
+            const userJsonName = allNames.find(n => /^([^/]+\/)?user\.json$/.test(n));
+            if (userJsonName) {
+              try {
+                const uj = JSON.parse(await zip.files[userJsonName].async('string'));
+                userId = uj.id || null;
+              } catch(_) {}
+            }
+
             // ── Conversation JSONs ──
             let candidates = allNames.filter(n => /conversation/i.test(n) && n.endsWith('.json'));
             if (!candidates.length) {
@@ -589,30 +604,71 @@ ${rows}
             // ── Images ──
             const imgNames = allNames.filter(n => isImageFile(n));
             const images = {};
-            for (const name of imgNames) {
-              const b64      = await zip.files[name].async('base64');
+
+            function indexImage(name, b64) {
               const basename = name.split('/').pop();
               const mime     = mimeFromName(basename);
-              const entry    = { base64: b64, mime, filename: basename };
+              const entry    = { base64: b64, mime, filename: basename, fullPath: name };
 
-              // Index by basename and full stem
+              // Index by full path, basename, and stem
+              images[name]     = entry;
               images[basename] = entry;
-              const stem = basename.replace(/\.[^.]+$/,'');
+              const stem = basename.replace(/\.[^.]+$/, '');
               images[stem] = entry;
 
-              // Index by every prefix of dash-separated segments
-              // so "file-abc123-f87d8fb3-..." is found by "file-abc123" etc.
+              // Index by every cumulative dash-segment prefix: "file-abc-def-..." -> also "file-abc", "file-abc-def"
               const segs = stem.split('-');
-              if (segs[0]==='file' || segs[0]==='file_service') {
+              if (segs.length > 1) {
                 let id = segs[0];
-                for (let i=1;i<segs.length;i++) {
+                for (let i = 1; i < segs.length; i++) {
                   id += '-' + segs[i];
-                  images[id] = entry;
+                  if (!images[id]) images[id] = entry; // don't overwrite more-specific matches
+                }
+              }
+
+              // For files in user-{id}/ subfolder (DALL·E generated):
+              // The folder name itself is the user-id, filenames are arbitrary.
+              // We also index by the path relative to the user folder.
+              if (userId && name.startsWith(userId + '/')) {
+                const rel = name.slice(userId.length + 1);
+                images[rel] = entry;
+                const relStem = rel.replace(/\.[^.]+$/, '');
+                images[relStem] = entry;
+              }
+            }
+
+            for (const name of imgNames) {
+              const b64 = await zip.files[name].async('base64');
+              indexImage(name, b64);
+            }
+
+            // ── Cross-reference: scan conversations for DALL·E fid/asset references ──
+            // In some exports, DALL·E images are referenced via metadata.dalle.gen_id or
+            // a tether_id in the message metadata. Build a secondary mapping if possible.
+            for (const conv of convs) {
+              if (!conv.mapping) continue;
+              for (const node of Object.values(conv.mapping)) {
+                const m = node.message;
+                if (!m?.metadata) continue;
+                // dalle metadata: { gen_id, prompt, seed, parent_gen_id }
+                const dalle = m.metadata.dalle;
+                if (dalle?.gen_id) {
+                  // Try to find image by gen_id prefix match
+                  const genId = String(dalle.gen_id);
+                  const match = Object.keys(images).find(k => k.includes(genId) || genId.includes(k));
+                  if (match && images[match]) {
+                    // Also index by the asset_pointer of the next sibling message if present
+                    const ap = m.content?.parts?.find(p => p?.content_type === 'image_asset_pointer');
+                    if (ap?.asset_pointer) {
+                      const fid = ap.asset_pointer.replace(/^file-service:\/\//, '');
+                      images[fid] = images[match];
+                    }
+                  }
                 }
               }
             }
 
-            const detail = `${candidates.length} conversation-JSON(s), ${imgNames.length} Bild(er)`;
+            const detail = `${candidates.length} conversation-JSON(s), ${imgNames.length} Bild(er)${userId ? ` (user: ${userId.slice(0,16)}…)` : ''}`;
             resolve({
               convs, images,
               error: !candidates.length ? 'Keine conversations*.json in ZIP gefunden.' : null,
