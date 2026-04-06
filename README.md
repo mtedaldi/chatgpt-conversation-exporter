@@ -8,7 +8,7 @@ When you request a data export from ChatGPT, OpenAI delivers a ZIP archive conta
 
 ## Features
 
-- **Multi-file support** — load all `conversations-*.json` files at once (drag & drop or file picker)
+- **Multi-file support** — load the full ChatGPT export ZIP directly, or individual `conversations-*.json` files (drag & drop or file picker)
 - **Full-text search** — searches both conversation titles and message content, with hit highlighting
 - **Sorting** — by date (newest/oldest), alphabetically, or by message count
 - **Selective export** — pick any subset of conversations
@@ -21,19 +21,15 @@ When you request a data export from ChatGPT, OpenAI delivers a ZIP archive conta
 
 👉 [Live version on GitHub Pages](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
 
-## Demo
-
-👉 [Live-Version auf GitHub Pages](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
-
 ## Usage
 
 1. Download `index.html`
 2. Open it in any modern browser (Chrome, Firefox, Safari, Edge)
-3. Select or drag your `conversations-*.json` files onto the drop zone
+3. Drop your ChatGPT export ZIP onto the drop zone — or select individual `conversations-*.json` files
 4. Search or sort to find the conversations you want
 5. Check the ones you need and click **↓ Markdown** or **↓ JSON**
 
-No installation, no dependencies, no internet connection required after the initial page load (Google Fonts are loaded from CDN but are purely cosmetic — the tool works without them).
+No installation required. The tool loads [JSZip](https://stuk.github.io/jszip/) from CDN for ZIP support, and Google Fonts for typography — both are purely optional; the tool works offline for JSON-only imports.
 
 ## Export formats
 

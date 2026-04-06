@@ -292,6 +292,7 @@
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -301,9 +302,9 @@
     </header>
 
     <div class="drop-zone" id="drop-zone">
-      <input type="file" id="file-input" accept=".json" multiple>
-      <label class="drop-zone-label" for="file-input">JSON-Dateien auswählen</label>
-      <p class="drop-zone-hint">oder hierhin ziehen — conversations-000.json, -001.json&nbsp;usw.</p>
+      <input type="file" id="file-input" accept=".json,.zip" multiple>
+      <label class="drop-zone-label" for="file-input">Dateien auswählen</label>
+      <p class="drop-zone-hint">ZIP-Export von ChatGPT oder einzelne conversations-*.json — per Klick oder Drag&nbsp;&amp;&nbsp;Drop</p>
     </div>
     <p class="file-status" id="file-status"></p>
 
@@ -537,18 +538,58 @@
       if (!files.length) return;
       const status = document.getElementById('file-status');
       status.textContent = 'Wird geladen…';
-      let loaded = 0, newConvs = [];
-      Array.from(files).forEach(file => {
+
+      const jsonFiles = [], zipFiles = [];
+      Array.from(files).forEach(f => {
+        if (f.name.endsWith('.zip') || f.type === 'application/zip') zipFiles.push(f);
+        else jsonFiles.push(f);
+      });
+
+      const allNewConvs = [];
+      let pending = jsonFiles.length + zipFiles.length;
+      if (pending === 0) return;
+
+      function done() {
+        if (--pending === 0) finalize(allNewConvs, files);
+      }
+
+      function parseJson(text) {
+        try {
+          const d = JSON.parse(text);
+          if (Array.isArray(d)) return d;
+          if (d.conversations) return d.conversations;
+        } catch (ex) {}
+        return [];
+      }
+
+      jsonFiles.forEach(file => {
         const r = new FileReader();
-        r.onload = e => {
-          try {
-            const d = JSON.parse(e.target.result);
-            if (Array.isArray(d)) newConvs = newConvs.concat(d);
-            else if (d.conversations) newConvs = newConvs.concat(d.conversations);
-          } catch (ex) { /* skip invalid files */ }
-          if (++loaded === files.length) finalize(newConvs, files);
-        };
+        r.onload = e => { allNewConvs.push(...parseJson(e.target.result)); done(); };
         r.readAsText(file);
+      });
+
+      zipFiles.forEach(file => {
+        const r = new FileReader();
+        r.onload = async e => {
+          try {
+            const zip = await JSZip.loadAsync(e.target.result);
+            const convFiles = Object.keys(zip.files).filter(name =>
+              /conversations(-\d+)?\.json$/i.test(name)
+            );
+            if (convFiles.length === 0) {
+              // fallback: try all json files in the zip
+              convFiles.push(...Object.keys(zip.files).filter(n => n.endsWith('.json') && !zip.files[n].dir));
+            }
+            let zipPending = convFiles.length || 1;
+            if (!convFiles.length) { done(); return; }
+            for (const name of convFiles) {
+              const text = await zip.files[name].async('string');
+              allNewConvs.push(...parseJson(text));
+              if (--zipPending === 0) done();
+            }
+          } catch (ex) { done(); }
+        };
+        r.readAsArrayBuffer(file);
       });
     }
 
