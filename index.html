@@ -42,270 +42,61 @@
       }
     }
 
-    body {
-      font-family: var(--font-ui);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
-
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-    }
-
-    header {
-      margin-bottom: 2rem;
-    }
-
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-
-    .header-row {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-    }
-
-    .version-badge {
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-      color: var(--text-hint);
-      background: var(--border);
-      padding: 1px 7px;
-      border-radius: 99px;
-      letter-spacing: 0.02em;
-    }
-
-    header p {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
-
+    body { font-family: var(--font-ui); background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 720px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: baseline; gap: 10px; }
+    header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
+    .version-badge { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-hint); background: var(--border); padding: 1px 7px; border-radius: 99px; letter-spacing: 0.02em; }
+    header p { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
     .status-error { color: #c0392b; }
 
-    /* Drop zone */
-    .drop-zone {
-      border: 1.5px dashed var(--border-md);
-      border-radius: var(--radius-lg);
-      padding: 2.5rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      background: var(--surface);
-    }
-
-    .drop-zone:hover, .drop-zone.drag-over {
-      background: var(--accent-bg);
-      border-color: var(--accent);
-    }
-
+    .drop-zone { border: 1.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 2.5rem 2rem; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; background: var(--surface); }
+    .drop-zone:hover, .drop-zone.drag-over { background: var(--accent-bg); border-color: var(--accent); }
     .drop-zone input[type="file"] { display: none; }
+    .drop-zone-label { display: inline-block; font-size: 0.9375rem; font-weight: 500; color: var(--accent); cursor: pointer; }
+    .drop-zone-hint { font-size: 0.8125rem; color: var(--text-hint); margin-top: 0.5rem; }
+    .file-status { font-size: 0.8125rem; color: var(--text-muted); text-align: center; margin-top: 0.75rem; min-height: 1.25rem; }
 
-    .drop-zone-label {
-      display: inline-block;
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: var(--accent);
-      cursor: pointer;
-    }
-
-    .drop-zone-hint {
-      font-size: 0.8125rem;
-      color: var(--text-hint);
-      margin-top: 0.5rem;
-    }
-
-    .file-status {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-      text-align: center;
-      margin-top: 0.75rem;
-      min-height: 1.25rem;
-    }
-
-    /* Controls */
     #main { display: none; margin-top: 1.5rem; }
 
-    .controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 0.75rem;
-    }
-
-    .controls input[type="text"] {
-      flex: 1;
-      height: 38px;
-      padding: 0 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 0.875rem;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
+    .controls { display: flex; gap: 8px; margin-bottom: 0.75rem; }
+    .controls input[type="text"] { flex: 1; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
     .controls input[type="text"]:focus { border-color: var(--accent); }
+    .controls select { height: 38px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 0.8125rem; outline: none; cursor: pointer; min-width: 150px; }
 
-    .controls select {
-      height: 38px;
-      padding: 0 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      color: var(--text);
-      font-family: var(--font-ui);
-      font-size: 0.8125rem;
-      outline: none;
-      cursor: pointer;
-      min-width: 150px;
-    }
+    .stats { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.625rem; }
 
-    .stats {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-      margin-bottom: 0.625rem;
-    }
-
-    /* List */
-    #list {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      max-height: 440px;
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
+    #list { display: flex; flex-direction: column; gap: 5px; max-height: 440px; overflow-y: auto; padding-right: 2px; }
     #list::-webkit-scrollbar { width: 4px; }
     #list::-webkit-scrollbar-track { background: transparent; }
     #list::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
 
-    .conv-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      background: var(--surface);
-      transition: background 0.1s, border-color 0.1s;
-      user-select: none;
-    }
-
+    .conv-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; background: var(--surface); transition: background 0.1s, border-color 0.1s; user-select: none; }
     .conv-item:hover { background: var(--accent-bg); border-color: var(--border-md); }
-
-    .conv-item.selected {
-      border: 1.5px solid var(--accent);
-      background: var(--accent-bg);
-    }
-
-    .conv-item input[type="checkbox"] {
-      margin-top: 2px;
-      flex-shrink: 0;
-      accent-color: var(--accent);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-    }
-
+    .conv-item.selected { border: 1.5px solid var(--accent); background: var(--accent-bg); }
+    .conv-item input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
     .conv-meta { flex: 1; min-width: 0; }
+    .conv-title { font-size: 0.875rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; font-family: var(--font-mono); }
+    .conv-snippet { font-size: 0.75rem; color: var(--text-hint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .conv-title {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    mark { background: var(--mark-bg); color: var(--mark-text); border-radius: 2px; padding: 0 1px; }
 
-    .conv-date {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-      font-family: var(--font-mono);
-    }
+    .actions { display: flex; gap: 8px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+    #sel-count { font-size: 0.8125rem; color: var(--text-muted); flex: 1; min-width: 80px; }
 
-    .conv-snippet {
-      font-size: 0.75rem;
-      color: var(--text-hint);
-      margin-top: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    mark {
-      background: var(--mark-bg);
-      color: var(--mark-text);
-      border-radius: 2px;
-      padding: 0 1px;
-    }
-
-    /* Actions */
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 1rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    #sel-count {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-      flex: 1;
-      min-width: 80px;
-    }
-
-    .btn {
-      height: 36px;
-      padding: 0 14px;
-      border-radius: var(--radius-sm);
-      font-family: var(--font-ui);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.12s, opacity 0.12s;
-      white-space: nowrap;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border-md);
-      color: var(--text);
-    }
-
+    .btn { height: 36px; padding: 0 14px; border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: background 0.12s, opacity 0.12s; white-space: nowrap; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border-md); color: var(--text); }
     .btn-ghost:hover { background: var(--accent-bg); }
-
-    .btn-primary {
-      background: var(--accent);
-      border: none;
-      color: #fff;
-    }
-
+    .btn-primary { background: var(--accent); border: none; color: #fff; }
     .btn-primary:hover { opacity: 0.88; }
     .btn-primary:disabled { opacity: 0.38; cursor: default; }
 
-    .export-group { display: flex; gap: 6px; }
+    .export-section { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
+    .export-section-label { font-size: 0.75rem; color: var(--text-hint); width: 100%; margin-bottom: -4px; }
 
-    footer {
-      margin-top: 3rem;
-      font-size: 0.75rem;
-      color: var(--text-hint);
-      text-align: center;
-    }
-
+    footer { margin-top: 3rem; font-size: 0.75rem; color: var(--text-hint); text-align: center; }
     footer a { color: var(--text-hint); text-decoration: underline; }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -317,15 +108,15 @@
     <header>
       <div class="header-row">
         <h1>ChatGPT Conversation Exporter</h1>
-        <span class="version-badge">v0.4.0</span>
+        <span class="version-badge">v0.5.0</span>
       </div>
-      <p>Konversationen durchsuchen, auswählen und als Markdown oder JSON exportieren</p>
+      <p>Konversationen durchsuchen, auswählen und als Markdown, JSON oder HTML (inkl. Bilder) exportieren</p>
     </header>
 
     <div class="drop-zone" id="drop-zone">
       <input type="file" id="file-input" accept=".json,.zip" multiple>
       <label class="drop-zone-label" for="file-input">Dateien auswählen</label>
-      <p class="drop-zone-hint">ZIP-Export von ChatGPT oder einzelne conversations-*.json — per Klick oder Drag&nbsp;&amp;&nbsp;Drop</p>
+      <p class="drop-zone-hint">ZIP-Export von ChatGPT oder einzelne conversations-*.json — per Klick oder Drag &amp; Drop</p>
     </div>
     <p class="file-status" id="file-status"></p>
 
@@ -345,10 +136,17 @@
         <span id="sel-count">0 ausgewählt</span>
         <button class="btn btn-ghost" onclick="selectAll()">Alle auswählen</button>
         <button class="btn btn-ghost" onclick="selectNone()">Auswahl aufheben</button>
-        <div class="export-group">
-          <button class="btn btn-primary" id="export-md-btn" onclick="exportSelected('md')" disabled>↓ Markdown</button>
-          <button class="btn btn-primary" id="export-json-btn" onclick="exportSelected('json')" disabled>↓ JSON</button>
-        </div>
+      </div>
+      <div class="export-section">
+        <span class="export-section-label">Ohne Bilder</span>
+        <button class="btn btn-primary" id="export-md-btn"   onclick="exportSelected('md')"   disabled>↓ Markdown</button>
+        <button class="btn btn-primary" id="export-json-btn" onclick="exportSelected('json')"  disabled>↓ JSON</button>
+      </div>
+      <div class="export-section">
+        <span class="export-section-label">Mit Bildern</span>
+        <button class="btn btn-primary" id="export-html-btn"    onclick="exportSelected('html')"    disabled>↓ HTML (eingebettet)</button>
+        <button class="btn btn-primary" id="export-mdimg-btn"   onclick="exportSelected('mdimg')"   disabled>↓ Markdown + ZIP</button>
+        <button class="btn btn-primary" id="export-jsonimg-btn" onclick="exportSelected('jsonimg')" disabled>↓ JSON + ZIP</button>
       </div>
     </div>
 
@@ -360,65 +158,128 @@
   </div>
 
   <script>
+    const VERSION = 'v0.5.0';
+
     let allConversations = [];
-    let filtered = [];
-    let selected = new Set();
+    let filtered        = [];
+    let selected        = new Set();
+    let imageIndex      = {}; // fileId / stem / basename -> { base64, mime, filename }
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function fmtDate(ts) {
+      if (!ts) return '';
+      return new Date(ts * 1000).toLocaleDateString('de-CH', { day:'2-digit', month:'2-digit', year:'numeric' });
+    }
+
+    function slugify(s) {
+      return (s || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').substring(0,60) || 'konversation';
+    }
+
+    function mimeFromName(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      return { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp', svg:'image/svg+xml' }[ext] || 'application/octet-stream';
+    }
+
+    function isImageFile(name) {
+      return /\.(jpe?g|png|gif|webp|svg)$/i.test(name);
+    }
+
+    function base64ToUint8Array(b64) {
+      const bin = atob(b64);
+      const out = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+
+    // ── Message extraction ─────────────────────────────────────────────────────
 
     function extractMessages(conv) {
-      const msgs = [];
-      if (!conv.mapping) return msgs;
+      if (!conv.mapping) return [];
       const nodes = Object.values(conv.mapping);
-      nodes.sort((a, b) => (a.message?.create_time || 0) - (b.message?.create_time || 0));
+      nodes.sort((a,b) => (a.message?.create_time||0) - (b.message?.create_time||0));
+      const msgs = [];
       for (const node of nodes) {
         const m = node.message;
-        if (!m || !m.content) continue;
+        if (!m?.content) continue;
         const role = m.author?.role;
         if (!role || role === 'system') continue;
+
         let text = '';
-        if (typeof m.content === 'string') text = m.content;
-        else if (Array.isArray(m.content.parts)) text = m.content.parts.filter(p => typeof p === 'string').join('\n');
-        else if (typeof m.content.text === 'string') text = m.content.text;
-        if (text.trim()) msgs.push({ role, text: text.trim(), time: m.create_time });
+        const images = [];
+
+        if (typeof m.content === 'string') {
+          text = m.content;
+        } else if (Array.isArray(m.content.parts)) {
+          for (const part of m.content.parts) {
+            if (typeof part === 'string') {
+              text += part;
+            } else if (part?.content_type === 'image_asset_pointer') {
+              // asset_pointer: "file-service://file-XXXX" or "file-XXXX"
+              const raw = part.asset_pointer || '';
+              const fileId = raw.replace(/^file-service:\/\//, '');
+              images.push({ fileId });
+            }
+          }
+        } else if (typeof m.content.text === 'string') {
+          text = m.content.text;
+        }
+
+        if (text.trim() || images.length) {
+          msgs.push({ role, text: text.trim(), time: m.create_time, images });
+        }
       }
       return msgs;
     }
 
+    function msgCount(conv)     { return extractMessages(conv).length; }
+    function convImgCount(conv) { return extractMessages(conv).reduce((n,m) => n + m.images.length, 0); }
+
     function snippet(conv) {
-      for (const m of extractMessages(conv)) if (m.role === 'user') return m.text.substring(0, 120);
+      for (const m of extractMessages(conv)) if (m.role==='user' && m.text) return m.text.substring(0,120);
       return '';
     }
 
-    function msgCount(conv) { return extractMessages(conv).length; }
-
-    function fmtDate(ts) {
-      if (!ts) return '';
-      return new Date(ts * 1000).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    }
-
-    function escHtml(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
+    // ── Highlight ──────────────────────────────────────────────────────────────
 
     function highlight(text, query) {
       if (!query) return escHtml(text);
-      const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return escHtml(text).replace(new RegExp(`(${esc})`, 'gi'), '<mark>$1</mark>');
+      const esc = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      return escHtml(text).replace(new RegExp(`(${esc})`,'gi'),'<mark>$1</mark>');
     }
 
+    // ── Image lookup ───────────────────────────────────────────────────────────
+
+    function lookupImage(fileId) {
+      if (!fileId) return null;
+      if (imageIndex[fileId]) return imageIndex[fileId];
+      // Try progressively shorter suffix matches
+      for (const key of Object.keys(imageIndex)) {
+        if (key.includes(fileId) || fileId.includes(key)) return imageIndex[key];
+      }
+      return null;
+    }
+
+    // ── UI list ────────────────────────────────────────────────────────────────
+
     function filterList() {
-      const q = document.getElementById('search').value.toLowerCase().trim();
+      const q    = document.getElementById('search').value.toLowerCase().trim();
       const sort = document.getElementById('sort').value;
 
       filtered = allConversations.filter(c => {
         if (!q) return true;
-        if ((c.title || '').toLowerCase().includes(q)) return true;
+        if ((c.title||'').toLowerCase().includes(q)) return true;
         return extractMessages(c).some(m => m.text.toLowerCase().includes(q));
       });
 
-      if (sort === 'date-desc') filtered.sort((a, b) => (b.create_time || 0) - (a.create_time || 0));
-      else if (sort === 'date-asc') filtered.sort((a, b) => (a.create_time || 0) - (b.create_time || 0));
-      else if (sort === 'alpha') filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-      else if (sort === 'msgs') filtered.sort((a, b) => msgCount(b) - msgCount(a));
+      if      (sort==='date-desc') filtered.sort((a,b)=>(b.create_time||0)-(a.create_time||0));
+      else if (sort==='date-asc')  filtered.sort((a,b)=>(a.create_time||0)-(b.create_time||0));
+      else if (sort==='alpha')     filtered.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+      else if (sort==='msgs')      filtered.sort((a,b)=>msgCount(b)-msgCount(a));
 
       const qOrig = document.getElementById('search').value.trim();
       document.getElementById('stats').textContent = `${filtered.length} von ${allConversations.length} Konversationen`;
@@ -426,18 +287,20 @@
       const list = document.getElementById('list');
       list.innerHTML = '';
       for (const c of filtered) {
-        const id = c.id;
+        const id         = c.id;
         const isSelected = selected.has(id);
-        const title = c.title || '(kein Titel)';
-        const snip = snippet(c);
+        const title      = c.title || '(kein Titel)';
+        const snip       = snippet(c);
+        const imgN       = convImgCount(c);
+
         const div = document.createElement('div');
         div.className = 'conv-item' + (isSelected ? ' selected' : '');
         div.dataset.id = id;
         div.innerHTML = `
-          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${id}', this.checked)" onclick="event.stopPropagation()">
+          <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelect('${id}',this.checked)" onclick="event.stopPropagation()">
           <div class="conv-meta">
             <div class="conv-title">${highlight(title, qOrig)}</div>
-            <div class="conv-date">${fmtDate(c.create_time)} &middot; ${msgCount(c)} Nachrichten</div>
+            <div class="conv-date">${fmtDate(c.create_time)} &middot; ${msgCount(c)} Nachrichten${imgN ? ` &middot; ${imgN}&thinsp;Bild(er)` : ''}</div>
             ${snip ? `<div class="conv-snippet">${highlight(snip, qOrig)}</div>` : ''}
           </div>`;
         div.addEventListener('click', () => {
@@ -452,24 +315,21 @@
 
     function toggleSelect(id, val) {
       if (val) selected.add(id); else selected.delete(id);
-      const item = document.querySelector(`.conv-item[data-id="${id}"]`);
-      if (item) item.classList.toggle('selected', val);
+      document.querySelector(`.conv-item[data-id="${id}"]`)?.classList.toggle('selected', val);
       updateActions();
     }
 
     function updateActions() {
       const n = selected.size;
       document.getElementById('sel-count').textContent = `${n} ausgewählt`;
-      document.getElementById('export-md-btn').disabled = n === 0;
-      document.getElementById('export-json-btn').disabled = n === 0;
+      ['export-md-btn','export-json-btn','export-html-btn','export-mdimg-btn','export-jsonimg-btn']
+        .forEach(id => { document.getElementById(id).disabled = n === 0; });
     }
 
-    function selectAll() { for (const c of filtered) selected.add(c.id); filterList(); }
+    function selectAll()  { for (const c of filtered) selected.add(c.id); filterList(); }
     function selectNone() { selected.clear(); filterList(); }
 
-    function slugify(s) {
-      return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 60) || 'konversation';
-    }
+    // ── Export: Markdown (plain) ───────────────────────────────────────────────
 
     function toMarkdown(conv) {
       const msgs = extractMessages(conv);
@@ -478,10 +338,80 @@
       if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
       lines.push(`Nachrichten: ${msgs.length}`, '', '---', '');
       for (const m of msgs) {
-        lines.push(m.role === 'user' ? '**Du**' : '**ChatGPT**', '', m.text, '', '---', '');
+        lines.push(m.role === 'user' ? '**Du**' : '**ChatGPT**', '');
+        if (m.text) lines.push(m.text, '');
+        for (const img of m.images) lines.push(`[Bild: ${img.fileId}]`, '');
+        lines.push('---', '');
       }
       return lines.join('\n');
     }
+
+    // ── Export: Markdown with relative image links ─────────────────────────────
+
+    function toMarkdownWithImages(conv, imgPrefix) {
+      const msgs = extractMessages(conv);
+      const lines = [];
+      lines.push(`# ${conv.title || '(kein Titel)'}`, '');
+      if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
+      lines.push(`Nachrichten: ${msgs.length}`, '', '---', '');
+      for (const m of msgs) {
+        lines.push(m.role === 'user' ? '**Du**' : '**ChatGPT**', '');
+        if (m.text) lines.push(m.text, '');
+        for (const img of m.images) {
+          const entry = lookupImage(img.fileId);
+          if (entry) lines.push(`![${img.fileId}](${imgPrefix}/${entry.filename})`, '');
+          else lines.push(`[Bild nicht gefunden: ${img.fileId}]`, '');
+        }
+        lines.push('---', '');
+      }
+      return lines.join('\n');
+    }
+
+    // ── Export: standalone HTML with embedded images ───────────────────────────
+
+    function toHtml(conv) {
+      const msgs  = extractMessages(conv);
+      const title = escHtml(conv.title || '(kein Titel)');
+
+      const rows = msgs.map(m => {
+        const isUser = m.role === 'user';
+        let content = '';
+        if (m.text) content += `<p style="white-space:pre-wrap;margin:0 0 8px 0">${escHtml(m.text)}</p>`;
+        for (const img of m.images) {
+          const entry = lookupImage(img.fileId);
+          if (entry) {
+            content += `<img src="data:${entry.mime};base64,${entry.base64}" alt="${escHtml(img.fileId)}" style="max-width:100%;border-radius:6px;margin:4px 0;display:block">`;
+          } else {
+            content += `<p style="color:#999;font-style:italic">[Bild nicht verfügbar: ${escHtml(img.fileId)}]</p>`;
+          }
+        }
+        return `<div style="margin:0 0 10px;padding:12px 16px;background:${isUser?'#f0f4ff':'#f9f9f7'};border:1px solid ${isUser?'#c0d0ff':'#e0e0d8'};border-radius:10px">
+  <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">${isUser?'Du':'ChatGPT'}</div>
+  ${content}
+</div>`;
+      }).join('\n');
+
+      return `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;background:#fafaf8;color:#1a1916;line-height:1.6}
+  h1{font-size:1.4rem;font-weight:600;margin-bottom:.25rem}
+  .meta{font-size:.8rem;color:#999;margin-bottom:1.75rem}
+</style>
+</head>
+<body>
+<h1>${title}</h1>
+<div class="meta">${fmtDate(conv.create_time)} &middot; ${msgs.length} Nachrichten &middot; exportiert mit ChatGPT Conversation Exporter ${VERSION}</div>
+${rows}
+</body>
+</html>`;
+    }
+
+    // ── Export: clean JSON ─────────────────────────────────────────────────────
 
     function toCleanJson(conv) {
       return {
@@ -489,71 +419,137 @@
         title: conv.title || '(kein Titel)',
         create_time: conv.create_time || null,
         update_time: conv.update_time || null,
-        messages: extractMessages(conv).map(m => ({ role: m.role, text: m.text, time: m.time || null }))
+        messages: extractMessages(conv).map(m => {
+          const out = { role: m.role, text: m.text, time: m.time || null };
+          if (m.images.length) {
+            out.images = m.images.map(img => {
+              const entry = lookupImage(img.fileId);
+              return entry ? { file_id: img.fileId, filename: entry.filename } : { file_id: img.fileId };
+            });
+          }
+          return out;
+        })
       };
     }
 
-    function exportSelected(fmt) {
-      const toExport = allConversations.filter(c => selected.has(c.id));
-      if (toExport.length === 1) {
-        const c = toExport[0];
-        const name = slugify(c.title || 'konversation');
-        if (fmt === 'md') download(name + '.md', toMarkdown(c), 'text/markdown');
-        else download(name + '.json', JSON.stringify(toCleanJson(c), null, 2), 'application/json');
-      } else {
-        if (fmt === 'md') {
-          downloadZip(toExport.map(c => ({ name: slugify(c.title || 'konversation') + '.md', data: toMarkdown(c) })), 'konversationen-md.zip');
-        } else {
-          download('konversationen.json', JSON.stringify(toExport.map(toCleanJson), null, 2), 'application/json');
-        }
-      }
-    }
+    // ── ZIP builder ────────────────────────────────────────────────────────────
 
-    function download(filename, text, mime) {
-      const a = document.createElement('a');
-      a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(text);
-      a.download = filename;
-      a.click();
-    }
-
-    function downloadZip(files, zipname) {
-      const usedNames = {};
-      for (const f of files) usedNames[f.name] = (usedNames[f.name] || 0) + 1;
-      const counts = {};
-      const deduped = files.map(f => {
-        counts[f.name] = (counts[f.name] || 0) + 1;
-        if (usedNames[f.name] > 1) return { ...f, name: f.name.replace(/\.md$/, '') + '-' + counts[f.name] + '.md' };
-        return f;
-      });
-
-      const crcTable = (() => {
+    function buildZip(entries) {
+      const enc = new TextEncoder();
+      const crcT = (() => {
         const t = new Uint32Array(256);
-        for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c; }
+        for (let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c;}
         return t;
       })();
-      const crc32 = data => { let c = 0xFFFFFFFF; for (let i = 0; i < data.length; i++) c = ((c >>> 8) ^ crcTable[(c ^ data[i]) & 0xFF]) >>> 0; return (c ^ 0xFFFFFFFF) >>> 0; };
-      const enc = new TextEncoder();
-      const u32le = n => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n, true); return b; };
-      const u16le = n => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, n, true); return b; };
-      const cat = arrays => { const t = arrays.reduce((s, a) => s + a.length, 0); const o = new Uint8Array(t); let i = 0; for (const a of arrays) { o.set(a, i); i += a.length; } return o; };
+      const crc32 = d=>{let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=((c>>>8)^crcT[(c^d[i])&0xFF])>>>0;return(c^0xFFFFFFFF)>>>0;};
+      const u32 = n=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
+      const u16 = n=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
+      const cat = arrs=>{const t=arrs.reduce((s,a)=>s+a.length,0);const o=new Uint8Array(t);let i=0;for(const a of arrs){o.set(a,i);i+=a.length;}return o;};
 
-      const parts = [], cd = [];
-      let offset = 0;
-      for (const f of deduped) {
-        const nb = enc.encode(f.name), db = enc.encode(f.data), crc = crc32(db);
-        const lh = cat([new Uint8Array([0x50, 0x4B, 0x03, 0x04]), u16le(20), u16le(0), u16le(0), u16le(0), u16le(0), u32le(crc), u32le(db.length), u32le(db.length), u16le(nb.length), u16le(0), nb]);
-        cd.push(cat([new Uint8Array([0x50, 0x4B, 0x01, 0x02]), u16le(20), u16le(20), u16le(0), u16le(0), u16le(0), u16le(0), u32le(crc), u32le(db.length), u32le(db.length), u16le(nb.length), u16le(0), u16le(0), u16le(0), u16le(0), u32le(0), u32le(offset), nb]));
-        parts.push(lh, db);
-        offset += lh.length + db.length;
+      // Deduplicate
+      const used={},cnt={};
+      for(const e of entries) used[e.name]=(used[e.name]||0)+1;
+      const final=entries.map(e=>{
+        cnt[e.name]=(cnt[e.name]||0)+1;
+        if(used[e.name]>1){const dot=e.name.lastIndexOf('.');const b=dot>=0?e.name.slice(0,dot):e.name;const x=dot>=0?e.name.slice(dot):'';return{...e,name:`${b}-${cnt[e.name]}${x}`};}
+        return e;
+      });
+
+      const parts=[],cd=[];let offset=0;
+      for(const e of final){
+        const nb=enc.encode(e.name);
+        const db=typeof e.data==='string'?enc.encode(e.data):e.data;
+        const crc=crc32(db);
+        const lh=cat([new Uint8Array([0x50,0x4B,0x03,0x04]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(db.length),u32(db.length),u16(nb.length),u16(0),nb]);
+        cd.push(cat([new Uint8Array([0x50,0x4B,0x01,0x02]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(db.length),u32(db.length),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),nb]));
+        parts.push(lh,db);offset+=lh.length+db.length;
       }
-      const cdd = cat(cd);
-      const eocd = cat([new Uint8Array([0x50, 0x4B, 0x05, 0x06]), u16le(0), u16le(0), u16le(deduped.length), u16le(deduped.length), u32le(cdd.length), u32le(offset), u16le(0)]);
-      const blob = new Blob([cat([...parts, cdd, eocd])], { type: 'application/zip' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = zipname; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const cdd=cat(cd);
+      const eocd=cat([new Uint8Array([0x50,0x4B,0x05,0x06]),u16(0),u16(0),u16(final.length),u16(final.length),u32(cdd.length),u32(offset),u16(0)]);
+      return cat([...parts,cdd,eocd]);
     }
+
+    // ── Download helpers ───────────────────────────────────────────────────────
+
+    function downloadText(filename, text, mime) {
+      const a = document.createElement('a');
+      a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(text);
+      a.download = filename; a.click();
+    }
+
+    function downloadBlob(data, filename) {
+      const url = URL.createObjectURL(new Blob([data], {type:'application/zip'}));
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    // ── Collect images for a set of conversations ──────────────────────────────
+
+    function collectImages(convs, prefix) {
+      // returns [{name, data (Uint8Array)}] for all referenced images found in index
+      const seen = new Set();
+      const entries = [];
+      for (const c of convs) {
+        for (const m of extractMessages(c)) {
+          for (const img of m.images) {
+            if (seen.has(img.fileId)) continue;
+            seen.add(img.fileId);
+            const entry = lookupImage(img.fileId);
+            if (entry) entries.push({ name: `${prefix}/${entry.filename}`, data: base64ToUint8Array(entry.base64) });
+          }
+        }
+      }
+      return entries;
+    }
+
+    // ── Export dispatcher ──────────────────────────────────────────────────────
+
+    function exportSelected(fmt) {
+      const convs = allConversations.filter(c => selected.has(c.id));
+      if (!convs.length) return;
+      const single = convs.length === 1;
+
+      if (fmt === 'md') {
+        if (single) { downloadText(slugify(convs[0].title)+'.md', toMarkdown(convs[0]), 'text/markdown'); }
+        else { downloadBlob(buildZip(convs.map(c=>({name:slugify(c.title)+'.md',data:toMarkdown(c)}))), 'konversationen-md.zip'); }
+        return;
+      }
+
+      if (fmt === 'json') {
+        if (single) { downloadText(slugify(convs[0].title)+'.json', JSON.stringify(toCleanJson(convs[0]),null,2), 'application/json'); }
+        else { downloadText('konversationen.json', JSON.stringify(convs.map(toCleanJson),null,2), 'application/json'); }
+        return;
+      }
+
+      if (fmt === 'html') {
+        if (single) { downloadText(slugify(convs[0].title)+'.html', toHtml(convs[0]), 'text/html'); }
+        else { downloadBlob(buildZip(convs.map(c=>({name:slugify(c.title)+'.html',data:toHtml(c)}))), 'konversationen-html.zip'); }
+        return;
+      }
+
+      if (fmt === 'mdimg') {
+        const entries = [];
+        for (const c of convs) {
+          const base = slugify(c.title);
+          const imgDir = 'images';
+          entries.push({ name: `${base}/${base}.md`, data: toMarkdownWithImages(c, imgDir) });
+          for (const ie of collectImages([c], `${base}/${imgDir}`)) entries.push(ie);
+        }
+        downloadBlob(buildZip(entries), 'konversationen-md-bilder.zip');
+        return;
+      }
+
+      if (fmt === 'jsonimg') {
+        const entries = [];
+        entries.push({ name: 'conversations.json', data: JSON.stringify(convs.map(toCleanJson), null, 2) });
+        for (const ie of collectImages(convs, 'images')) entries.push(ie);
+        downloadBlob(buildZip(entries), 'konversationen-json-bilder.zip');
+        return;
+      }
+    }
+
+    // ── File loading ───────────────────────────────────────────────────────────
 
     function setStatus(text, isError) {
       const el = document.getElementById('file-status');
@@ -566,42 +562,64 @@
         const d = JSON.parse(text);
         if (Array.isArray(d)) return d;
         if (d && Array.isArray(d.conversations)) return d.conversations;
-      } catch (ex) {}
+      } catch(ex) {}
       return [];
     }
 
     async function loadZip(file) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         const r = new FileReader();
-        r.onerror = () => resolve({ convs: [], error: 'ZIP konnte nicht gelesen werden.' });
-        r.onload = async (e) => {
+        r.onerror = () => resolve({ convs:[], images:{}, error:'ZIP konnte nicht gelesen werden.' });
+        r.onload = async e => {
           try {
             const zip = await JSZip.loadAsync(e.target.result);
             const allNames = Object.keys(zip.files).filter(n => !zip.files[n].dir);
 
-            // Match any JSON file whose basename contains "conversation"
+            // ── Conversation JSONs ──
             let candidates = allNames.filter(n => /conversation/i.test(n) && n.endsWith('.json'));
-
-            // Fallback: all JSON files except known non-conversation ones
-            if (candidates.length === 0) {
+            if (!candidates.length) {
               const skip = /^(user|manifest|feedback|settings|shared)/i;
               candidates = allNames.filter(n => n.endsWith('.json') && !skip.test(n.split('/').pop()));
             }
-
-            if (candidates.length === 0) {
-              resolve({ convs: [], error: `ZIP geöffnet, aber keine conversations*.json gefunden. Enthaltene JSON-Dateien: ${allNames.filter(n=>n.endsWith('.json')).join(', ') || '(keine)'}` });
-              return;
-            }
-
             let convs = [];
             for (const name of candidates) {
-              const text = await zip.files[name].async('string');
-              const parsed = parseJsonText(text);
-              convs = convs.concat(parsed);
+              convs = convs.concat(parseJsonText(await zip.files[name].async('string')));
             }
-            resolve({ convs, error: null, detail: `${candidates.length} Datei(en) aus ZIP gelesen: ${candidates.map(n=>n.split('/').pop()).join(', ')}` });
-          } catch (ex) {
-            resolve({ convs: [], error: `ZIP-Fehler: ${ex.message}` });
+
+            // ── Images ──
+            const imgNames = allNames.filter(n => isImageFile(n));
+            const images = {};
+            for (const name of imgNames) {
+              const b64      = await zip.files[name].async('base64');
+              const basename = name.split('/').pop();
+              const mime     = mimeFromName(basename);
+              const entry    = { base64: b64, mime, filename: basename };
+
+              // Index by basename and full stem
+              images[basename] = entry;
+              const stem = basename.replace(/\.[^.]+$/,'');
+              images[stem] = entry;
+
+              // Index by every prefix of dash-separated segments
+              // so "file-abc123-f87d8fb3-..." is found by "file-abc123" etc.
+              const segs = stem.split('-');
+              if (segs[0]==='file' || segs[0]==='file_service') {
+                let id = segs[0];
+                for (let i=1;i<segs.length;i++) {
+                  id += '-' + segs[i];
+                  images[id] = entry;
+                }
+              }
+            }
+
+            const detail = `${candidates.length} conversation-JSON(s), ${imgNames.length} Bild(er)`;
+            resolve({
+              convs, images,
+              error: !candidates.length ? 'Keine conversations*.json in ZIP gefunden.' : null,
+              detail
+            });
+          } catch(ex) {
+            resolve({ convs:[], images:{}, error:`ZIP-Fehler: ${ex.message}` });
           }
         };
         r.readAsArrayBuffer(file);
@@ -612,52 +630,47 @@
       if (!files.length) return;
       setStatus('Wird geladen…', false);
 
-      const jsonFiles = [], zipFiles = [];
+      const jsonFiles=[], zipFiles=[];
       Array.from(files).forEach(f => {
-        if (f.name.toLowerCase().endsWith('.zip') || f.type === 'application/zip') zipFiles.push(f);
+        if (f.name.toLowerCase().endsWith('.zip') || f.type==='application/zip') zipFiles.push(f);
         else jsonFiles.push(f);
       });
 
-      let allNewConvs = [];
-      const errors = [];
-      const details = [];
+      let newConvs=[];
+      const errors=[], details=[];
 
-      // Load plain JSON files
       for (const file of jsonFiles) {
         await new Promise(resolve => {
           const r = new FileReader();
           r.onerror = () => { errors.push(`${file.name}: Lesefehler`); resolve(); };
-          r.onload = e => { allNewConvs = allNewConvs.concat(parseJsonText(e.target.result)); resolve(); };
+          r.onload  = e  => { newConvs = newConvs.concat(parseJsonText(e.target.result)); resolve(); };
           r.readAsText(file);
         });
       }
 
-      // Load ZIP files
       for (const file of zipFiles) {
         const result = await loadZip(file);
-        allNewConvs = allNewConvs.concat(result.convs);
-        if (result.error) errors.push(result.error);
+        newConvs = newConvs.concat(result.convs);
+        Object.assign(imageIndex, result.images);
+        if (result.error)  errors.push(result.error);
         if (result.detail) details.push(result.detail);
       }
 
-      finalize(allNewConvs, files, errors, details);
-    }
-
-    function finalize(newConvs, files, errors = [], details = []) {
-      const ids = new Set(allConversations.map(c => c.id));
+      // Merge into global list (deduplicate by id)
+      const ids = new Set(allConversations.map(c=>c.id));
       for (const c of newConvs) if (!ids.has(c.id)) allConversations.push(c);
 
-      const countInfo = `${allConversations.length} Konversationen geladen`;
+      const imgTotal = Object.keys(imageIndex).length;
+      const countInfo  = `${allConversations.length} Konversationen geladen` + (imgTotal ? ` · ${imgTotal} Bild-Einträge indexiert` : '');
       const detailInfo = details.length ? ` (${details.join('; ')})` : '';
-      const errorInfo = errors.length ? ` ⚠ ${errors.join(' | ')}` : '';
-
+      const errorInfo  = errors.length  ? ` ⚠ ${errors.join(' | ')}` : '';
       setStatus(countInfo + detailInfo + errorInfo, errors.length > 0);
+
       document.getElementById('main').style.display = 'block';
       filterList();
     }
 
     document.getElementById('file-input').addEventListener('change', e => loadFiles(e.target.files));
-
     const dz = document.getElementById('drop-zone');
     dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));

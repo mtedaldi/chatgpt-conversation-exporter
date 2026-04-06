@@ -12,9 +12,13 @@ When you request a data export from ChatGPT, OpenAI delivers a ZIP archive conta
 - **Full-text search** — searches both conversation titles and message content, with hit highlighting
 - **Sorting** — by date (newest/oldest), alphabetically, or by message count
 - **Selective export** — pick any subset of conversations
-- **Two export formats**
-  - **Markdown** — clean, readable `.md` files; multiple conversations are bundled as a ZIP
-  - **JSON** — stripped-down, readable JSON without ChatGPT's internal mapping structure; multiple conversations are exported as a single array
+- **Five export formats** — without and with images:
+  - **Markdown** — clean `.md` file(s), multiple conversations bundled as ZIP
+  - **JSON** — stripped-down JSON without ChatGPT's internal mapping structure
+  - **HTML** *(with images)* — self-contained `.html` with all images embedded as Base64
+  - **Markdown + ZIP** *(with images)* — `.md` with relative image links + `images/` folder
+  - **JSON + ZIP** *(with images)* — `conversations.json` + `images/` folder
+- **Image support** — user-uploaded photos and DALL·E generated images are extracted from the ZIP and matched to conversation messages
 - **100 % client-side** — no server, no uploads, no tracking; your data never leaves the browser
 
 ## Demo
