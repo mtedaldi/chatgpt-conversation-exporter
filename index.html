@@ -108,7 +108,7 @@
     <header>
       <div class="header-row">
         <h1>ChatGPT Conversation Exporter</h1>
-        <span class="version-badge">v0.5.1</span>
+        <span class="version-badge">v0.5.2</span>
       </div>
       <p>Konversationen durchsuchen, auswählen und als Markdown, JSON oder HTML (inkl. Bilder) exportieren</p>
     </header>
@@ -158,7 +158,7 @@
   </div>
 
   <script>
-    const VERSION = 'v0.5.1';
+    const VERSION = 'v0.5.2';
 
     let allConversations = [];
     let filtered        = [];
@@ -219,9 +219,13 @@
             if (typeof part === 'string') {
               text += part;
             } else if (part?.content_type === 'image_asset_pointer') {
-              // asset_pointer: "file-service://file-XXXX" or "file-XXXX"
+              // Two asset_pointer formats exist:
+              // 1. "file-service://file-<base58id>"  → older uploaded files
+              // 2. "sediment://file_<hexprefix>"     → newer uploads + DALL·E generated
               const raw = part.asset_pointer || '';
-              const fileId = raw.replace(/^file-service:\/\//, '');
+              let fileId = raw
+                .replace(/^file-service:\/\//, '')
+                .replace(/^sediment:\/\//, '');
               images.push({ fileId });
             }
           }
@@ -610,30 +614,38 @@ ${rows}
               const mime     = mimeFromName(basename);
               const entry    = { base64: b64, mime, filename: basename, fullPath: name };
 
-              // Index by full path, basename, and stem
               images[name]     = entry;
               images[basename] = entry;
+
               const stem = basename.replace(/\.[^.]+$/, '');
               images[stem] = entry;
 
-              // Index by every cumulative dash-segment prefix: "file-abc-def-..." -> also "file-abc", "file-abc-def"
+              // Two asset_pointer schemes in ChatGPT exports:
+              //
+              // 1. sediment://file_<hexprefix>
+              //    Files: "file_<hexprefix>-<uuid>.png" (root) or "user-{id}/file_<hexprefix>-<uuid>.png" (DALL·E)
+              //    → index by "file_<hexprefix>" (everything before the first '-<uuid>')
+              const hexMatch = stem.match(/^(file_[0-9a-f]+)/i);
+              if (hexMatch) {
+                images[hexMatch[1]] = entry;
+              }
+
+              // 2. file-service://file-<base58id>
+              //    Files: "file-<base58id>-<originalname>" or "file-<base58id>-<uuid><digits>"
+              //    → index by "file-<base58id>" (the first two dash-segments)
+              const b58Match = stem.match(/^(file-[A-Za-z0-9]{10,}?)(?=-)/);
+              if (b58Match) {
+                images[b58Match[1]] = entry;
+              }
+
+              // Fallback: all cumulative dash-prefixes
               const segs = stem.split('-');
               if (segs.length > 1) {
                 let id = segs[0];
                 for (let i = 1; i < segs.length; i++) {
                   id += '-' + segs[i];
-                  if (!images[id]) images[id] = entry; // don't overwrite more-specific matches
+                  if (!images[id]) images[id] = entry;
                 }
-              }
-
-              // For files in user-{id}/ subfolder (DALL·E generated):
-              // The folder name itself is the user-id, filenames are arbitrary.
-              // We also index by the path relative to the user folder.
-              if (userId && name.startsWith(userId + '/')) {
-                const rel = name.slice(userId.length + 1);
-                images[rel] = entry;
-                const relStem = rel.replace(/\.[^.]+$/, '');
-                images[relStem] = entry;
               }
             }
 
