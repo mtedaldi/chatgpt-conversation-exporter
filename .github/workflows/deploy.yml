@@ -1,0 +1,118 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Checkout embed-google-fonts
+        uses: actions/checkout@v4
+        with:
+          repository: mtedaldi/embed-google-fonts
+          path: embed-google-fonts
+
+      - name: Copy index.html to build dir
+        run: |
+          mkdir -p build
+          cp index.html build/index.html
+
+      - name: Inline JSZip from cdnjs
+        run: |
+          python3 - <<'EOF'
+          import urllib.request, re, pathlib
+
+          html_path = pathlib.Path('build/index.html')
+          html = html_path.read_text(encoding='utf-8')
+
+          jszip_url = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+          print(f'Downloading JSZip from {jszip_url}')
+          with urllib.request.urlopen(jszip_url, timeout=30) as r:
+              jszip_js = r.read().decode('utf-8')
+          print(f'  → {len(jszip_js)//1024} KB')
+
+          # Replace <script src="...jszip..."> with inline <script>
+          pattern = re.compile(
+              r'<script\s+src=["\'][^"\']*jszip[^"\']*["\'][^>]*>\s*</script>',
+              re.IGNORECASE
+          )
+          count = len(pattern.findall(html))
+          if count == 0:
+              print('WARNING: No JSZip <script src> tag found in index.html')
+          else:
+              html = pattern.sub(f'<script>\n{jszip_js}\n</script>', html, count=1)
+              print(f'  ✓ JSZip inlined ({count} tag replaced)')
+
+          html_path.write_text(html, encoding='utf-8')
+          EOF
+
+      - name: Embed Google Fonts
+        run: |
+          python3 embed-google-fonts/embed-google-fonts.py build/index.html --inplace
+
+      - name: Verify output (no external requests)
+        run: |
+          python3 - <<'EOF'
+          import pathlib, sys, re
+
+          html = pathlib.Path('build/index.html').read_text(encoding='utf-8')
+          issues = []
+
+          if 'fonts.googleapis.com' in html:
+              issues.append('Google Fonts URL still present')
+          if 'fonts.gstatic.com' in html:
+              issues.append('Google Fonts gstatic URL still present')
+          if re.search(r'<script\s+src=["\'][^"\']*jszip', html, re.IGNORECASE):
+              issues.append('JSZip CDN <script src> still present')
+
+          size_kb = len(html.encode('utf-8')) // 1024
+          print(f'Output size: {size_kb} KB')
+
+          if issues:
+              for i in issues:
+                  print(f'FAIL: {i}', file=sys.stderr)
+              sys.exit(1)
+          else:
+              print('✓ No external font or CDN requests in output')
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
