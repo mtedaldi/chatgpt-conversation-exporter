@@ -82,11 +82,14 @@ jobs:
           html = pathlib.Path('build/index.html').read_text(encoding='utf-8')
           issues = []
 
-          if 'fonts.googleapis.com' in html:
-              issues.append('Google Fonts URL still present')
-          if 'fonts.gstatic.com' in html:
-              issues.append('Google Fonts gstatic URL still present')
-          if re.search(r'<script\s+src=["\'][^"\']*jszip', html, re.IGNORECASE):
+          # Check for active external font requests (not mere URL mentions in embedded CSS)
+          if re.search(r'<link\b[^>]*fonts\.googleapis\.com', html, re.IGNORECASE):
+              issues.append('<link> tag with Google Fonts URL still present')
+          if re.search(r'@import\s+url\(["\']?https://fonts\.googleapis\.com', html, re.IGNORECASE):
+              issues.append('@import with Google Fonts URL still present')
+          if re.search(r'url\(["\']?https://fonts\.gstatic\.com', html, re.IGNORECASE):
+              issues.append('External gstatic font URL still present (not embedded)')
+          if re.search(r'<script\s+src=["\'][^"\']*jszip[^"\']*["\']', html, re.IGNORECASE):
               issues.append('JSZip CDN <script src> still present')
 
           size_kb = len(html.encode('utf-8')) // 1024
