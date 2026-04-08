@@ -19,6 +19,7 @@
       --accent-bg: #eef3ff;
       --mark-bg:   #ffe066;
       --mark-text: #4a3800;
+      --danger:    #c0392b;
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
@@ -39,62 +40,109 @@
         --accent-bg: #1a2540;
         --mark-bg:   #7a6000;
         --mark-text: #ffe066;
+        --danger:    #e05a4a;
       }
     }
 
     body { font-family: var(--font-ui); background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
-    .container { max-width: 720px; margin: 0 auto; }
+    .container { max-width: 760px; margin: 0 auto; }
+
+    /* ── Header ── */
     header { margin-bottom: 2rem; }
     .header-row { display: flex; align-items: baseline; gap: 10px; }
-    header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
-    .version-badge { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-hint); background: var(--border); padding: 1px 7px; border-radius: 99px; letter-spacing: 0.02em; }
+    header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+    .version-badge { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-hint); background: var(--border); padding: 1px 7px; border-radius: 99px; }
     header p { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
-    .status-error { color: #c0392b; }
 
+    /* ── Drop zone ── */
     .drop-zone { border: 1.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 2.5rem 2rem; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; background: var(--surface); }
     .drop-zone:hover, .drop-zone.drag-over { background: var(--accent-bg); border-color: var(--accent); }
     .drop-zone input[type="file"] { display: none; }
     .drop-zone-label { display: inline-block; font-size: 0.9375rem; font-weight: 500; color: var(--accent); cursor: pointer; }
     .drop-zone-hint { font-size: 0.8125rem; color: var(--text-hint); margin-top: 0.5rem; }
     .file-status { font-size: 0.8125rem; color: var(--text-muted); text-align: center; margin-top: 0.75rem; min-height: 1.25rem; }
+    .status-error { color: var(--danger); }
 
+    /* ── Progress bar ── */
+    .progress-wrap { margin-top: 0.75rem; display: none; }
+    .progress-bar-bg { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.2s; width: 0%; }
+    .progress-label { font-size: 0.75rem; color: var(--text-hint); margin-top: 4px; text-align: center; }
+
+    /* ── Main area ── */
     #main { display: none; margin-top: 1.5rem; }
 
-    .controls { display: flex; gap: 8px; margin-bottom: 0.75rem; }
-    .controls input[type="text"] { flex: 1; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+    /* ── Controls row ── */
+    .controls { display: flex; gap: 8px; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .controls input[type="text"] { flex: 1; min-width: 160px; height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
     .controls input[type="text"]:focus { border-color: var(--accent); }
-    .controls select { height: 38px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 0.8125rem; outline: none; cursor: pointer; min-width: 150px; }
+    .controls select { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 0.8125rem; outline: none; cursor: pointer; }
+    .filter-imgs { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; font-size: 0.8125rem; color: var(--text-muted); white-space: nowrap; user-select: none; transition: background 0.1s, border-color 0.1s; }
+    .filter-imgs:hover { background: var(--accent-bg); border-color: var(--border-md); }
+    .filter-imgs.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+    .filter-imgs input { accent-color: var(--accent); margin: 0; cursor: pointer; }
 
     .stats { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.625rem; }
 
-    #list { display: flex; flex-direction: column; gap: 5px; max-height: 440px; overflow-y: auto; padding-right: 2px; }
+    /* ── Two-column layout when preview open ── */
+    .workspace { display: flex; gap: 12px; align-items: flex-start; }
+    #list-col { flex: 0 0 280px; min-width: 0; }
+    #preview-col { flex: 1; min-width: 0; display: none; }
+
+    /* ── Conversation list ── */
+    #list { display: flex; flex-direction: column; gap: 5px; max-height: 480px; overflow-y: auto; padding-right: 2px; }
     #list::-webkit-scrollbar { width: 4px; }
     #list::-webkit-scrollbar-track { background: transparent; }
     #list::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
 
-    .conv-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; background: var(--surface); transition: background 0.1s, border-color 0.1s; user-select: none; }
+    .conv-item { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); transition: background 0.1s, border-color 0.1s; user-select: none; }
     .conv-item:hover { background: var(--accent-bg); border-color: var(--border-md); }
     .conv-item.selected { border: 1.5px solid var(--accent); background: var(--accent-bg); }
-    .conv-item input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
-    .conv-meta { flex: 1; min-width: 0; }
-    .conv-title { font-size: 0.875rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .conv-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; font-family: var(--font-mono); }
-    .conv-snippet { font-size: 0.75rem; color: var(--text-hint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-item.previewing { border: 1.5px solid var(--accent); }
+    .conv-item input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+    .conv-meta { flex: 1; min-width: 0; cursor: pointer; }
+    .conv-title { font-size: 0.8125rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-date { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; font-family: var(--font-mono); }
+    .conv-snippet { font-size: 0.7rem; color: var(--text-hint); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     mark { background: var(--mark-bg); color: var(--mark-text); border-radius: 2px; padding: 0 1px; }
 
+    /* ── Preview panel ── */
+    .preview-panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); display: flex; flex-direction: column; max-height: 560px; }
+    .preview-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .preview-title { font-size: 0.875rem; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .preview-close { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 1rem; padding: 2px 4px; border-radius: var(--radius-sm); line-height: 1; }
+    .preview-close:hover { background: var(--border); color: var(--text); }
+    .preview-body { overflow-y: auto; flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .preview-body::-webkit-scrollbar { width: 4px; }
+    .preview-body::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
+
+    .msg-bubble { padding: 9px 12px; border-radius: var(--radius-md); font-size: 0.8125rem; line-height: 1.6; }
+    .msg-bubble.user { background: var(--accent-bg); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); align-self: flex-end; max-width: 92%; }
+    .msg-bubble.assistant { background: var(--bg); border: 1px solid var(--border); align-self: flex-start; max-width: 92%; }
+    .msg-role { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-hint); margin-bottom: 5px; }
+    .msg-text { white-space: pre-wrap; word-break: break-word; }
+    .msg-img { max-width: 100%; border-radius: var(--radius-sm); margin-top: 6px; display: block; }
+    .msg-img-missing { font-size: 0.75rem; color: var(--text-hint); font-style: italic; margin-top: 4px; }
+
+    /* ── Actions + export ── */
     .actions { display: flex; gap: 8px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
     #sel-count { font-size: 0.8125rem; color: var(--text-muted); flex: 1; min-width: 80px; }
-
-    .btn { height: 36px; padding: 0 14px; border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: background 0.12s, opacity 0.12s; white-space: nowrap; }
+    .btn { height: 34px; padding: 0 13px; border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: background 0.12s, opacity 0.12s; white-space: nowrap; }
     .btn-ghost { background: transparent; border: 1px solid var(--border-md); color: var(--text); }
     .btn-ghost:hover { background: var(--accent-bg); }
     .btn-primary { background: var(--accent); border: none; color: #fff; }
     .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:disabled { opacity: 0.38; cursor: default; }
+    .btn-primary:disabled { opacity: 0.35; cursor: default; }
 
-    .export-section { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
-    .export-section-label { font-size: 0.75rem; color: var(--text-hint); width: 100%; margin-bottom: -4px; }
+    .export-section { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
+    .export-section-label { font-size: 0.72rem; color: var(--text-hint); width: 100%; margin-bottom: -2px; }
+
+    /* ── Export progress overlay ── */
+    #export-progress { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+    #export-progress.visible { display: flex; }
+    .export-progress-box { background: var(--surface); border-radius: var(--radius-lg); padding: 2rem 2.5rem; text-align: center; min-width: 260px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+    .export-progress-box p { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.75rem; }
 
     footer { margin-top: 3rem; font-size: 0.75rem; color: var(--text-hint); text-align: center; }
     footer a { color: var(--text-hint); text-decoration: underline; }
@@ -107,9 +155,9 @@
     <header>
       <div class="header-row">
         <h1>ChatGPT Conversation Exporter</h1>
-        <span class="version-badge">v0.5.3</span>
+        <span class="version-badge">v1.0.0</span>
       </div>
-      <p>Konversationen durchsuchen, auswählen und als Markdown, JSON oder HTML (inkl. Bilder) exportieren</p>
+      <p>Konversationen durchsuchen, auswählen, lesen und als Markdown, JSON oder HTML exportieren</p>
     </header>
 
     <div class="drop-zone" id="drop-zone">
@@ -118,6 +166,10 @@
       <p class="drop-zone-hint">ZIP-Export von ChatGPT oder einzelne conversations-*.json — per Klick oder Drag &amp; Drop</p>
     </div>
     <p class="file-status" id="file-status"></p>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+      <p class="progress-label" id="progress-label"></p>
+    </div>
 
     <div id="main">
       <div class="controls">
@@ -128,9 +180,28 @@
           <option value="alpha">A – Z</option>
           <option value="msgs">Meiste Nachrichten</option>
         </select>
+        <label class="filter-imgs" id="filter-imgs-btn">
+          <input type="checkbox" id="filter-imgs" onchange="filterList()">
+          Nur mit Bildern
+        </label>
       </div>
       <p class="stats" id="stats"></p>
-      <div id="list"></div>
+
+      <div class="workspace">
+        <div id="list-col">
+          <div id="list"></div>
+        </div>
+        <div id="preview-col">
+          <div class="preview-panel">
+            <div class="preview-header">
+              <span class="preview-title" id="preview-title"></span>
+              <button class="preview-close" onclick="closePreview()" title="Vorschau schliessen">✕</button>
+            </div>
+            <div class="preview-body" id="preview-body"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="actions">
         <span id="sel-count">0 ausgewählt</span>
         <button class="btn btn-ghost" onclick="selectAll()">Alle auswählen</button>
@@ -143,7 +214,7 @@
       </div>
       <div class="export-section">
         <span class="export-section-label">Mit Bildern</span>
-        <button class="btn btn-primary" id="export-html-btn"    onclick="exportSelected('html')"    disabled>↓ HTML (eingebettet)</button>
+        <button class="btn btn-primary" id="export-html-btn"    onclick="exportSelected('html')"    disabled>↓ HTML</button>
         <button class="btn btn-primary" id="export-mdimg-btn"   onclick="exportSelected('mdimg')"   disabled>↓ Markdown + ZIP</button>
         <button class="btn btn-primary" id="export-jsonimg-btn" onclick="exportSelected('jsonimg')" disabled>↓ JSON + ZIP</button>
       </div>
@@ -156,13 +227,24 @@
     </footer>
   </div>
 
+  <!-- Export progress overlay -->
+  <div id="export-progress">
+    <div class="export-progress-box">
+      <div class="progress-bar-bg" style="width:200px;margin:0 auto">
+        <div class="progress-bar-fill" id="export-progress-fill"></div>
+      </div>
+      <p id="export-progress-label">Exportiere…</p>
+    </div>
+  </div>
+
   <script>
-    const VERSION = 'v0.5.3';
+    const VERSION = 'v1.0.0';
 
     let allConversations = [];
     let filtered        = [];
     let selected        = new Set();
-    let imageIndex      = {}; // fileId / stem / basename -> { base64, mime, filename }
+    let imageIndex      = {};
+    let previewingId    = null;
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -184,13 +266,10 @@
       return { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp', svg:'image/svg+xml' }[ext] || 'application/octet-stream';
     }
 
-    function isImageFile(name) {
-      return /\.(jpe?g|png|gif|webp|svg)$/i.test(name);
-    }
+    function isImageFile(name) { return /\.(jpe?g|png|gif|webp|svg)$/i.test(name); }
 
     function base64ToUint8Array(b64) {
-      const bin = atob(b64);
-      const out = new Uint8Array(bin.length);
+      const bin = atob(b64), out = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
       return out;
     }
@@ -207,10 +286,8 @@
         if (!m?.content) continue;
         const role = m.author?.role;
         if (!role || role === 'system') continue;
-
         let text = '';
         const images = [];
-
         if (typeof m.content === 'string') {
           text = m.content;
         } else if (Array.isArray(m.content.parts)) {
@@ -218,20 +295,14 @@
             if (typeof part === 'string') {
               text += part;
             } else if (part?.content_type === 'image_asset_pointer') {
-              // Two asset_pointer formats exist:
-              // 1. "file-service://file-<base58id>"  → older uploaded files
-              // 2. "sediment://file_<hexprefix>"     → newer uploads + DALL·E generated
               const raw = part.asset_pointer || '';
-              let fileId = raw
-                .replace(/^file-service:\/\//, '')
-                .replace(/^sediment:\/\//, '');
+              const fileId = raw.replace(/^file-service:\/\//, '').replace(/^sediment:\/\//, '');
               images.push({ fileId });
             }
           }
         } else if (typeof m.content.text === 'string') {
           text = m.content.text;
         }
-
         if (text.trim() || images.length) {
           msgs.push({ role, text: text.trim(), time: m.create_time, images });
         }
@@ -243,11 +314,9 @@
     function convImgCount(conv) { return extractMessages(conv).reduce((n,m) => n + m.images.length, 0); }
 
     function snippet(conv) {
-      for (const m of extractMessages(conv)) if (m.role==='user' && m.text) return m.text.substring(0,120);
+      for (const m of extractMessages(conv)) if (m.role==='user' && m.text) return m.text.substring(0,100);
       return '';
     }
-
-    // ── Highlight ──────────────────────────────────────────────────────────────
 
     function highlight(text, query) {
       if (!query) return escHtml(text);
@@ -259,26 +328,89 @@
 
     function lookupImage(fileId) {
       if (!fileId) return null;
-      // 1. Exact match
       if (imageIndex[fileId]) return imageIndex[fileId];
-      // 2. fileId is a prefix of an index key (e.g. fileId="file-abc" matches "file-abc-uuid.jpg")
       for (const key of Object.keys(imageIndex)) {
         if (key.startsWith(fileId) || fileId.startsWith(key)) return imageIndex[key];
       }
-      // 3. fileId contains or is contained in key (last resort)
       for (const key of Object.keys(imageIndex)) {
         if (key.includes(fileId) || fileId.includes(key)) return imageIndex[key];
       }
       return null;
     }
 
-    // ── UI list ────────────────────────────────────────────────────────────────
+    // ── Preview ────────────────────────────────────────────────────────────────
+
+    function openPreview(conv) {
+      previewingId = conv.id;
+      document.getElementById('preview-col').style.display = 'block';
+      document.getElementById('list-col').style.flex = '0 0 260px';
+      document.getElementById('preview-title').textContent = conv.title || '(kein Titel)';
+
+      const body = document.getElementById('preview-body');
+      body.innerHTML = '';
+      const msgs = extractMessages(conv);
+
+      for (const m of msgs) {
+        const isUser = m.role === 'user';
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble ' + (isUser ? 'user' : 'assistant');
+
+        const roleEl = document.createElement('div');
+        roleEl.className = 'msg-role';
+        roleEl.textContent = isUser ? 'Du' : 'ChatGPT';
+        bubble.appendChild(roleEl);
+
+        if (m.text) {
+          const textEl = document.createElement('div');
+          textEl.className = 'msg-text';
+          textEl.textContent = m.text;
+          bubble.appendChild(textEl);
+        }
+
+        for (const img of m.images) {
+          const entry = lookupImage(img.fileId);
+          if (entry) {
+            const imgEl = document.createElement('img');
+            imgEl.className = 'msg-img';
+            imgEl.src = `data:${entry.mime};base64,${entry.base64}`;
+            imgEl.alt = img.fileId;
+            bubble.appendChild(imgEl);
+          } else {
+            const miss = document.createElement('div');
+            miss.className = 'msg-img-missing';
+            miss.textContent = `[Bild nicht verfügbar: ${img.fileId}]`;
+            bubble.appendChild(miss);
+          }
+        }
+
+        body.appendChild(bubble);
+      }
+
+      // Mark previewing item
+      document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('previewing'));
+      const item = document.querySelector(`.conv-item[data-id="${conv.id}"]`);
+      if (item) item.classList.add('previewing');
+    }
+
+    function closePreview() {
+      previewingId = null;
+      document.getElementById('preview-col').style.display = 'none';
+      document.getElementById('list-col').style.flex = '';
+      document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('previewing'));
+    }
+
+    // ── Filter / list ──────────────────────────────────────────────────────────
 
     function filterList() {
-      const q    = document.getElementById('search').value.toLowerCase().trim();
-      const sort = document.getElementById('sort').value;
+      const q       = document.getElementById('search').value.toLowerCase().trim();
+      const sort    = document.getElementById('sort').value;
+      const imgOnly = document.getElementById('filter-imgs').checked;
+
+      // Update filter button style
+      document.getElementById('filter-imgs-btn').classList.toggle('active', imgOnly);
 
       filtered = allConversations.filter(c => {
+        if (imgOnly && convImgCount(c) === 0) return false;
         if (!q) return true;
         if ((c.title||'').toLowerCase().includes(q)) return true;
         return extractMessages(c).some(m => m.text.toLowerCase().includes(q));
@@ -290,35 +422,50 @@
       else if (sort==='msgs')      filtered.sort((a,b)=>msgCount(b)-msgCount(a));
 
       const qOrig = document.getElementById('search').value.trim();
-      document.getElementById('stats').textContent = `${filtered.length} von ${allConversations.length} Konversationen`;
+      const total = allConversations.length;
+      const withImgs = allConversations.filter(c => convImgCount(c) > 0).length;
+      document.getElementById('stats').textContent =
+        `${filtered.length} von ${total} Konversationen` +
+        (withImgs ? ` · ${withImgs} mit Bildern` : '');
 
       const list = document.getElementById('list');
       list.innerHTML = '';
+
       for (const c of filtered) {
         const id         = c.id;
         const isSelected = selected.has(id);
+        const isPreviewing = previewingId === id;
         const title      = c.title || '(kein Titel)';
         const snip       = snippet(c);
         const imgN       = convImgCount(c);
 
         const div = document.createElement('div');
-        div.className = 'conv-item' + (isSelected ? ' selected' : '');
+        div.className = 'conv-item' + (isSelected?' selected':'') + (isPreviewing?' previewing':'');
         div.dataset.id = id;
-        div.innerHTML = `
-          <input type="checkbox" ${isSelected?'checked':''} onchange="toggleSelect('${id}',this.checked)" onclick="event.stopPropagation()">
-          <div class="conv-meta">
-            <div class="conv-title">${highlight(title, qOrig)}</div>
-            <div class="conv-date">${fmtDate(c.create_time)} &middot; ${msgCount(c)} Nachrichten${imgN ? ` &middot; ${imgN}&thinsp;Bild(er)` : ''}</div>
-            ${snip ? `<div class="conv-snippet">${highlight(snip, qOrig)}</div>` : ''}
-          </div>`;
-        div.addEventListener('click', () => {
-          const cb = div.querySelector('input[type=checkbox]');
-          cb.checked = !cb.checked;
-          toggleSelect(id, cb.checked);
-        });
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = isSelected;
+        cb.addEventListener('change', e => { e.stopPropagation(); toggleSelect(id, cb.checked); });
+        cb.addEventListener('click', e => e.stopPropagation());
+        div.appendChild(cb);
+
+        const meta = document.createElement('div');
+        meta.className = 'conv-meta';
+        meta.innerHTML = `
+          <div class="conv-title">${highlight(title, qOrig)}</div>
+          <div class="conv-date">${fmtDate(c.create_time)} · ${msgCount(c)} Nachrichten${imgN ? ` · ${imgN} Bild(er)` : ''}</div>
+          ${snip ? `<div class="conv-snippet">${highlight(snip, qOrig)}</div>` : ''}`;
+        meta.addEventListener('click', () => openPreview(c));
+        div.appendChild(meta);
+
         list.appendChild(div);
       }
+
       updateActions();
+
+      // If previewing conv is still in filtered list, keep preview open
+      if (previewingId && !filtered.find(c => c.id === previewingId)) closePreview();
     }
 
     function toggleSelect(id, val) {
@@ -337,16 +484,33 @@
     function selectAll()  { for (const c of filtered) selected.add(c.id); filterList(); }
     function selectNone() { selected.clear(); filterList(); }
 
-    // ── Export: Markdown (plain) ───────────────────────────────────────────────
+    // ── Export: progress helpers ───────────────────────────────────────────────
+
+    function showExportProgress(label) {
+      const el = document.getElementById('export-progress');
+      el.classList.add('visible');
+      document.getElementById('export-progress-label').textContent = label;
+      document.getElementById('export-progress-fill').style.width = '0%';
+    }
+
+    function updateExportProgress(pct, label) {
+      document.getElementById('export-progress-fill').style.width = pct + '%';
+      if (label) document.getElementById('export-progress-label').textContent = label;
+    }
+
+    function hideExportProgress() {
+      document.getElementById('export-progress').classList.remove('visible');
+    }
+
+    // ── Export: text formats ───────────────────────────────────────────────────
 
     function toMarkdown(conv) {
       const msgs = extractMessages(conv);
-      const lines = [];
-      lines.push(`# ${conv.title || '(kein Titel)'}`, '');
+      const lines = [`# ${conv.title || '(kein Titel)'}`, ''];
       if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
       lines.push(`Nachrichten: ${msgs.length}`, '', '---', '');
       for (const m of msgs) {
-        lines.push(m.role === 'user' ? '**Du**' : '**ChatGPT**', '');
+        lines.push(m.role==='user' ? '**Du**' : '**ChatGPT**', '');
         if (m.text) lines.push(m.text, '');
         for (const img of m.images) lines.push(`[Bild: ${img.fileId}]`, '');
         lines.push('---', '');
@@ -354,72 +518,55 @@
       return lines.join('\n');
     }
 
-    // ── Export: Markdown with relative image links ─────────────────────────────
-
     function toMarkdownWithImages(conv, imgPrefix) {
       const msgs = extractMessages(conv);
-      const lines = [];
-      lines.push(`# ${conv.title || '(kein Titel)'}`, '');
+      const lines = [`# ${conv.title || '(kein Titel)'}`, ''];
       if (conv.create_time) lines.push(`Datum: ${fmtDate(conv.create_time)}`);
       lines.push(`Nachrichten: ${msgs.length}`, '', '---', '');
       for (const m of msgs) {
-        lines.push(m.role === 'user' ? '**Du**' : '**ChatGPT**', '');
+        lines.push(m.role==='user' ? '**Du**' : '**ChatGPT**', '');
         if (m.text) lines.push(m.text, '');
         for (const img of m.images) {
           const entry = lookupImage(img.fileId);
-          if (entry) lines.push(`![${img.fileId}](${imgPrefix}/${entry.filename})`, '');
-          else lines.push(`[Bild nicht gefunden: ${img.fileId}]`, '');
+          lines.push(entry ? `![${img.fileId}](${imgPrefix}/${entry.filename})` : `[Bild nicht gefunden: ${img.fileId}]`, '');
         }
         lines.push('---', '');
       }
       return lines.join('\n');
     }
 
-    // ── Export: standalone HTML with embedded images ───────────────────────────
-
     function toHtml(conv) {
       const msgs  = extractMessages(conv);
       const title = escHtml(conv.title || '(kein Titel)');
-
       const rows = msgs.map(m => {
         const isUser = m.role === 'user';
         let content = '';
         if (m.text) content += `<p style="white-space:pre-wrap;margin:0 0 8px 0">${escHtml(m.text)}</p>`;
         for (const img of m.images) {
           const entry = lookupImage(img.fileId);
-          if (entry) {
-            content += `<img src="data:${entry.mime};base64,${entry.base64}" alt="${escHtml(img.fileId)}" style="max-width:100%;border-radius:6px;margin:4px 0;display:block">`;
-          } else {
-            content += `<p style="color:#999;font-style:italic">[Bild nicht verfügbar: ${escHtml(img.fileId)}]</p>`;
-          }
+          if (entry) content += `<img src="data:${entry.mime};base64,${entry.base64}" alt="${escHtml(img.fileId)}" style="max-width:100%;border-radius:6px;margin:4px 0;display:block">`;
+          else content += `<p style="color:#999;font-style:italic">[Bild nicht verfügbar: ${escHtml(img.fileId)}]</p>`;
         }
         return `<div style="margin:0 0 10px;padding:12px 16px;background:${isUser?'#f0f4ff':'#f9f9f7'};border:1px solid ${isUser?'#c0d0ff':'#e0e0d8'};border-radius:10px">
   <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">${isUser?'Du':'ChatGPT'}</div>
   ${content}
 </div>`;
       }).join('\n');
-
       return `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title>
-<style>
-  body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;background:#fafaf8;color:#1a1916;line-height:1.6}
-  h1{font-size:1.4rem;font-weight:600;margin-bottom:.25rem}
-  .meta{font-size:.8rem;color:#999;margin-bottom:1.75rem}
-</style>
+<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;background:#fafaf8;color:#1a1916;line-height:1.6}h1{font-size:1.4rem;font-weight:600;margin-bottom:.25rem}.meta{font-size:.8rem;color:#999;margin-bottom:1.75rem}</style>
 </head>
 <body>
 <h1>${title}</h1>
-<div class="meta">${fmtDate(conv.create_time)} &middot; ${msgs.length} Nachrichten &middot; exportiert mit ChatGPT Conversation Exporter ${VERSION}</div>
+<div class="meta">${fmtDate(conv.create_time)} · ${msgs.length} Nachrichten · ChatGPT Conversation Exporter ${VERSION}</div>
 ${rows}
 </body>
 </html>`;
     }
-
-    // ── Export: clean JSON ─────────────────────────────────────────────────────
 
     function toCleanJson(conv) {
       return {
@@ -450,19 +597,16 @@ ${rows}
         return t;
       })();
       const crc32 = d=>{let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=((c>>>8)^crcT[(c^d[i])&0xFF])>>>0;return(c^0xFFFFFFFF)>>>0;};
-      const u32 = n=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
-      const u16 = n=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
-      const cat = arrs=>{const t=arrs.reduce((s,a)=>s+a.length,0);const o=new Uint8Array(t);let i=0;for(const a of arrs){o.set(a,i);i+=a.length;}return o;};
-
-      // Deduplicate
+      const u32=n=>{const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;};
+      const u16=n=>{const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;};
+      const cat=arrs=>{const t=arrs.reduce((s,a)=>s+a.length,0);const o=new Uint8Array(t);let i=0;for(const a of arrs){o.set(a,i);i+=a.length;}return o;};
       const used={},cnt={};
-      for(const e of entries) used[e.name]=(used[e.name]||0)+1;
+      for(const e of entries)used[e.name]=(used[e.name]||0)+1;
       const final=entries.map(e=>{
         cnt[e.name]=(cnt[e.name]||0)+1;
         if(used[e.name]>1){const dot=e.name.lastIndexOf('.');const b=dot>=0?e.name.slice(0,dot):e.name;const x=dot>=0?e.name.slice(dot):'';return{...e,name:`${b}-${cnt[e.name]}${x}`};}
         return e;
       });
-
       const parts=[],cd=[];let offset=0;
       for(const e of final){
         const nb=enc.encode(e.name);
@@ -477,8 +621,6 @@ ${rows}
       return cat([...parts,cdd,eocd]);
     }
 
-    // ── Download helpers ───────────────────────────────────────────────────────
-
     function downloadText(filename, text, mime) {
       const a = document.createElement('a');
       a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(text);
@@ -486,18 +628,14 @@ ${rows}
     }
 
     function downloadBlob(data, filename) {
-      const url = URL.createObjectURL(new Blob([data], {type:'application/zip'}));
+      const url = URL.createObjectURL(new Blob([data],{type:'application/zip'}));
       const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
     }
 
-    // ── Collect images for a set of conversations ──────────────────────────────
-
     function collectImages(convs, prefix) {
-      // returns [{name, data (Uint8Array)}] for all referenced images found in index
-      const seen = new Set();
-      const entries = [];
+      const seen = new Set(), entries = [];
       for (const c of convs) {
         for (const m of extractMessages(c)) {
           for (const img of m.images) {
@@ -513,47 +651,90 @@ ${rows}
 
     // ── Export dispatcher ──────────────────────────────────────────────────────
 
-    function exportSelected(fmt) {
+    async function exportSelected(fmt) {
       const convs = allConversations.filter(c => selected.has(c.id));
       if (!convs.length) return;
       const single = convs.length === 1;
+      const total  = convs.length;
 
-      if (fmt === 'md') {
-        if (single) { downloadText(slugify(convs[0].title)+'.md', toMarkdown(convs[0]), 'text/markdown'); }
-        else { downloadBlob(buildZip(convs.map(c=>({name:slugify(c.title)+'.md',data:toMarkdown(c)}))), 'konversationen-md.zip'); }
-        return;
-      }
+      showExportProgress(`Exportiere 0 / ${total}…`);
 
-      if (fmt === 'json') {
-        if (single) { downloadText(slugify(convs[0].title)+'.json', JSON.stringify(toCleanJson(convs[0]),null,2), 'application/json'); }
-        else { downloadText('konversationen.json', JSON.stringify(convs.map(toCleanJson),null,2), 'application/json'); }
-        return;
-      }
+      // Small yield to let the overlay render
+      await new Promise(r => setTimeout(r, 30));
 
-      if (fmt === 'html') {
-        if (single) { downloadText(slugify(convs[0].title)+'.html', toHtml(convs[0]), 'text/html'); }
-        else { downloadBlob(buildZip(convs.map(c=>({name:slugify(c.title)+'.html',data:toHtml(c)}))), 'konversationen-html.zip'); }
-        return;
-      }
-
-      if (fmt === 'mdimg') {
-        const entries = [];
-        for (const c of convs) {
-          const base = slugify(c.title);
-          const imgDir = 'images';
-          entries.push({ name: `${base}/${base}.md`, data: toMarkdownWithImages(c, imgDir) });
-          for (const ie of collectImages([c], `${base}/${imgDir}`)) entries.push(ie);
+      try {
+        if (fmt === 'md') {
+          if (single) {
+            downloadText(slugify(convs[0].title)+'.md', toMarkdown(convs[0]), 'text/markdown');
+          } else {
+            const entries = [];
+            for (let i = 0; i < convs.length; i++) {
+              updateExportProgress(Math.round((i/total)*90), `Exportiere ${i+1} / ${total}…`);
+              await new Promise(r => setTimeout(r, 0));
+              entries.push({ name: slugify(convs[i].title)+'.md', data: toMarkdown(convs[i]) });
+            }
+            updateExportProgress(95, 'Packe ZIP…');
+            await new Promise(r => setTimeout(r, 0));
+            downloadBlob(buildZip(entries), 'konversationen-md.zip');
+          }
         }
-        downloadBlob(buildZip(entries), 'konversationen-md-bilder.zip');
-        return;
-      }
 
-      if (fmt === 'jsonimg') {
-        const entries = [];
-        entries.push({ name: 'conversations.json', data: JSON.stringify(convs.map(toCleanJson), null, 2) });
-        for (const ie of collectImages(convs, 'images')) entries.push(ie);
-        downloadBlob(buildZip(entries), 'konversationen-json-bilder.zip');
-        return;
+        else if (fmt === 'json') {
+          if (single) {
+            downloadText(slugify(convs[0].title)+'.json', JSON.stringify(toCleanJson(convs[0]),null,2), 'application/json');
+          } else {
+            updateExportProgress(50, 'Erstelle JSON…');
+            await new Promise(r => setTimeout(r, 0));
+            downloadText('konversationen.json', JSON.stringify(convs.map(toCleanJson),null,2), 'application/json');
+          }
+        }
+
+        else if (fmt === 'html') {
+          if (single) {
+            downloadText(slugify(convs[0].title)+'.html', toHtml(convs[0]), 'text/html');
+          } else {
+            const entries = [];
+            for (let i = 0; i < convs.length; i++) {
+              updateExportProgress(Math.round((i/total)*90), `Exportiere ${i+1} / ${total}…`);
+              await new Promise(r => setTimeout(r, 0));
+              entries.push({ name: slugify(convs[i].title)+'.html', data: toHtml(convs[i]) });
+            }
+            updateExportProgress(95, 'Packe ZIP…');
+            await new Promise(r => setTimeout(r, 0));
+            downloadBlob(buildZip(entries), 'konversationen-html.zip');
+          }
+        }
+
+        else if (fmt === 'mdimg') {
+          const entries = [];
+          for (let i = 0; i < convs.length; i++) {
+            updateExportProgress(Math.round((i/total)*80), `Exportiere ${i+1} / ${total}…`);
+            await new Promise(r => setTimeout(r, 0));
+            const c = convs[i], base = slugify(c.title), imgDir = 'images';
+            entries.push({ name: `${base}/${base}.md`, data: toMarkdownWithImages(c, imgDir) });
+            for (const ie of collectImages([c], `${base}/${imgDir}`)) entries.push(ie);
+          }
+          updateExportProgress(95, 'Packe ZIP…');
+          await new Promise(r => setTimeout(r, 0));
+          downloadBlob(buildZip(entries), 'konversationen-md-bilder.zip');
+        }
+
+        else if (fmt === 'jsonimg') {
+          updateExportProgress(40, 'Erstelle JSON…');
+          await new Promise(r => setTimeout(r, 0));
+          const entries = [{ name: 'conversations.json', data: JSON.stringify(convs.map(toCleanJson),null,2) }];
+          updateExportProgress(70, 'Sammle Bilder…');
+          await new Promise(r => setTimeout(r, 0));
+          for (const ie of collectImages(convs, 'images')) entries.push(ie);
+          updateExportProgress(95, 'Packe ZIP…');
+          await new Promise(r => setTimeout(r, 0));
+          downloadBlob(buildZip(entries), 'konversationen-json-bilder.zip');
+        }
+
+        updateExportProgress(100, 'Fertig!');
+        await new Promise(r => setTimeout(r, 500));
+      } finally {
+        hideExportProgress();
       }
     }
 
@@ -565,6 +746,13 @@ ${rows}
       el.className = 'file-status' + (isError ? ' status-error' : '');
     }
 
+    function setProgress(pct, label) {
+      const wrap = document.getElementById('progress-wrap');
+      wrap.style.display = pct >= 100 ? 'none' : 'block';
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-label').textContent = label;
+    }
+
     function parseJsonText(text) {
       try {
         const d = JSON.parse(text);
@@ -574,26 +762,25 @@ ${rows}
       return [];
     }
 
-    async function loadZip(file) {
+    async function loadZip(file, onProgress) {
       return new Promise(resolve => {
         const r = new FileReader();
         r.onerror = () => resolve({ convs:[], images:{}, error:'ZIP konnte nicht gelesen werden.' });
         r.onload = async e => {
           try {
+            onProgress(5, 'ZIP wird geöffnet…');
             const zip = await JSZip.loadAsync(e.target.result);
             const allNames = Object.keys(zip.files).filter(n => !zip.files[n].dir);
 
-            // ── Read user.json to get user-ID (for generated image subfolder) ──
+            // user.json → userId
             let userId = null;
-            const userJsonName = allNames.find(n => /^([^/]+\/)?user\.json$/.test(n));
-            if (userJsonName) {
-              try {
-                const uj = JSON.parse(await zip.files[userJsonName].async('string'));
-                userId = uj.id || null;
-              } catch(_) {}
+            const ujName = allNames.find(n => /^([^/]+\/)?user\.json$/.test(n));
+            if (ujName) {
+              try { userId = JSON.parse(await zip.files[ujName].async('string')).id || null; } catch(_) {}
             }
 
-            // ── Conversation JSONs ──
+            // Conversations
+            onProgress(10, 'Konversationen lesen…');
             let candidates = allNames.filter(n => /conversation/i.test(n) && n.endsWith('.json'));
             if (!candidates.length) {
               const skip = /^(user|manifest|feedback|settings|shared)/i;
@@ -604,7 +791,7 @@ ${rows}
               convs = convs.concat(parseJsonText(await zip.files[name].async('string')));
             }
 
-            // ── Images ──
+            // Images
             const imgNames = allNames.filter(n => isImageFile(n));
             const images = {};
 
@@ -612,66 +799,39 @@ ${rows}
               const basename = name.split('/').pop();
               const mime     = mimeFromName(basename);
               const entry    = { base64: b64, mime, filename: basename, fullPath: name };
-
-              images[name]     = entry;
-              images[basename] = entry;
-
-              const stem = basename.replace(/\.[^.]+$/, '');
+              images[name] = images[basename] = entry;
+              const stem = basename.replace(/\.[^.]+$/,'');
               images[stem] = entry;
-
-              // Two asset_pointer schemes in ChatGPT exports:
-              //
-              // 1. sediment://file_<hexprefix>
-              //    Files: "file_<hexprefix>-<uuid>.png" (root) or "user-{id}/file_<hexprefix>-<uuid>.png" (DALL·E)
-              //    → index by "file_<hexprefix>" (everything before the first '-<uuid>')
               const hexMatch = stem.match(/^(file_[0-9a-f]+)/i);
-              if (hexMatch) {
-                images[hexMatch[1]] = entry;
-              }
-
-              // 2. file-service://file-<base58id>
-              //    Files: "file-<base58id>-<originalname>" or "file-<base58id>-<uuid><digits>"
-              //    → index by "file-<base58id>" (the first two dash-segments)
+              if (hexMatch) images[hexMatch[1]] = entry;
               const b58Match = stem.match(/^(file-[A-Za-z0-9]{10,}?)(?=-)/);
-              if (b58Match) {
-                images[b58Match[1]] = entry;
-              }
-
-              // Fallback: all cumulative dash-prefixes
+              if (b58Match) images[b58Match[1]] = entry;
               const segs = stem.split('-');
               if (segs.length > 1) {
                 let id = segs[0];
-                for (let i = 1; i < segs.length; i++) {
-                  id += '-' + segs[i];
-                  if (!images[id]) images[id] = entry;
-                }
+                for (let i=1;i<segs.length;i++) { id+='-'+segs[i]; if(!images[id]) images[id]=entry; }
               }
             }
 
-            for (const name of imgNames) {
-              const b64 = await zip.files[name].async('base64');
-              indexImage(name, b64);
+            for (let i = 0; i < imgNames.length; i++) {
+              onProgress(20 + Math.round((i/Math.max(imgNames.length,1))*70), `Bilder indexieren ${i+1}/${imgNames.length}…`);
+              const b64 = await zip.files[imgNames[i]].async('base64');
+              indexImage(imgNames[i], b64);
             }
 
-            // ── Cross-reference: scan conversations for DALL·E fid/asset references ──
-            // In some exports, DALL·E images are referenced via metadata.dalle.gen_id or
-            // a tether_id in the message metadata. Build a secondary mapping if possible.
+            // DALL·E cross-reference
             for (const conv of convs) {
               if (!conv.mapping) continue;
               for (const node of Object.values(conv.mapping)) {
                 const m = node.message;
-                if (!m?.metadata) continue;
-                // dalle metadata: { gen_id, prompt, seed, parent_gen_id }
-                const dalle = m.metadata.dalle;
+                const dalle = m?.metadata?.dalle;
                 if (dalle?.gen_id) {
-                  // Try to find image by gen_id prefix match
                   const genId = String(dalle.gen_id);
-                  const match = Object.keys(images).find(k => k.includes(genId) || genId.includes(k));
-                  if (match && images[match]) {
-                    // Also index by the asset_pointer of the next sibling message if present
-                    const ap = m.content?.parts?.find(p => p?.content_type === 'image_asset_pointer');
+                  const match = Object.keys(images).find(k => k.includes(genId)||genId.includes(k));
+                  if (match) {
+                    const ap = m.content?.parts?.find(p=>p?.content_type==='image_asset_pointer');
                     if (ap?.asset_pointer) {
-                      const fid = ap.asset_pointer.replace(/^file-service:\/\//, '');
+                      const fid = ap.asset_pointer.replace(/^file-service:\/\//,'').replace(/^sediment:\/\//,'');
                       images[fid] = images[match];
                     }
                   }
@@ -679,12 +839,9 @@ ${rows}
               }
             }
 
-            const detail = `${candidates.length} conversation-JSON(s), ${imgNames.length} Bild(er)${userId ? ` (user: ${userId.slice(0,16)}…)` : ''}`;
-            resolve({
-              convs, images,
-              error: !candidates.length ? 'Keine conversations*.json in ZIP gefunden.' : null,
-              detail
-            });
+            onProgress(100, '');
+            const detail = `${candidates.length} JSON(s), ${imgNames.length} Bild(er)`;
+            resolve({ convs, images, error: !candidates.length ? 'Keine conversations*.json gefunden.' : null, detail });
           } catch(ex) {
             resolve({ convs:[], images:{}, error:`ZIP-Fehler: ${ex.message}` });
           }
@@ -696,6 +853,7 @@ ${rows}
     async function loadFiles(files) {
       if (!files.length) return;
       setStatus('Wird geladen…', false);
+      setProgress(0, 'Starte…');
 
       const jsonFiles=[], zipFiles=[];
       Array.from(files).forEach(f => {
@@ -705,30 +863,39 @@ ${rows}
 
       let newConvs=[];
       const errors=[], details=[];
+      const totalFiles = jsonFiles.length + zipFiles.length;
+      let doneFiles = 0;
 
       for (const file of jsonFiles) {
+        setProgress(Math.round((doneFiles/totalFiles)*100), `Lese ${file.name}…`);
         await new Promise(resolve => {
           const r = new FileReader();
           r.onerror = () => { errors.push(`${file.name}: Lesefehler`); resolve(); };
-          r.onload  = e  => { newConvs = newConvs.concat(parseJsonText(e.target.result)); resolve(); };
+          r.onload  = e => { newConvs = newConvs.concat(parseJsonText(e.target.result)); resolve(); };
           r.readAsText(file);
         });
+        doneFiles++;
       }
 
       for (const file of zipFiles) {
-        const result = await loadZip(file);
+        const baseProgress = Math.round((doneFiles/totalFiles)*100);
+        const result = await loadZip(file, (pct, label) => {
+          setProgress(baseProgress + Math.round((pct/100) * (100/totalFiles)), label || `Lese ${file.name}…`);
+        });
         newConvs = newConvs.concat(result.convs);
         Object.assign(imageIndex, result.images);
         if (result.error)  errors.push(result.error);
         if (result.detail) details.push(result.detail);
+        doneFiles++;
       }
 
-      // Merge into global list (deduplicate by id)
+      setProgress(100, '');
+
       const ids = new Set(allConversations.map(c=>c.id));
       for (const c of newConvs) if (!ids.has(c.id)) allConversations.push(c);
 
-      const imgTotal = Object.keys(imageIndex).length;
-      const countInfo  = `${allConversations.length} Konversationen geladen` + (imgTotal ? ` · ${imgTotal} Bild-Einträge indexiert` : '');
+      const imgTotal  = Object.keys(imageIndex).length;
+      const countInfo = `${allConversations.length} Konversationen geladen` + (imgTotal ? ` · ${imgTotal} Bilder` : '');
       const detailInfo = details.length ? ` (${details.join('; ')})` : '';
       const errorInfo  = errors.length  ? ` ⚠ ${errors.join(' | ')}` : '';
       setStatus(countInfo + detailInfo + errorInfo, errors.length > 0);
