@@ -64,8 +64,12 @@ jobs:
           if count == 0:
               print('WARNING: No JSZip <script src> tag found in index.html')
           else:
-              html = pattern.sub(f'<script>\n{jszip_js}\n</script>', html, count=1)
-              print(f'  ✓ JSZip inlined ({count} tag replaced)')
+              # Escape </script> inside the JS — the browser HTML parser would
+              # otherwise terminate the script block prematurely.
+              jszip_safe = jszip_js.replace('</script', '<\\/script')
+              escaped = jszip_safe.count('<\\/script')
+              html = pattern.sub(f'<script>\n{jszip_safe}\n</script>', html, count=1)
+              print(f'  ✓ JSZip inlined ({count} tag replaced, {escaped} </script> escaped)')
 
           html_path.write_text(html, encoding='utf-8')
           EOF
