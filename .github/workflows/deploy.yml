@@ -83,8 +83,9 @@ jobs:
           issues = []
 
           # Check for active external font requests (not mere URL mentions in embedded CSS)
-          if re.search(r'<link\b[^>]*fonts\.googleapis\.com', html, re.IGNORECASE):
-              issues.append('<link> tag with Google Fonts URL still present')
+          if re.search(r'<link\b[^>]*rel=["\']stylesheet["\'][^>]*fonts\.googleapis\.com', html, re.IGNORECASE) or \
+             re.search(r'<link\b[^>]*fonts\.googleapis\.com[^>]*rel=["\']stylesheet["\']', html, re.IGNORECASE):
+              issues.append('<link rel="stylesheet"> with Google Fonts URL still present')
           if re.search(r'@import\s+url\(["\']?https://fonts\.googleapis\.com', html, re.IGNORECASE):
               issues.append('@import with Google Fonts URL still present')
           if re.search(r'url\(["\']?https://fonts\.gstatic\.com', html, re.IGNORECASE):
