@@ -1,82 +1,74 @@
 # ChatGPT Conversation Exporter
 
-A lightweight, browser-based tool to search, browse, and export individual conversations from a ChatGPT data export — including images.
+A fully client-side browser tool to search, preview, and export your ChatGPT conversations from a ChatGPT data export (ZIP or JSON).
 
-## Background
+**Live:** [mtedaldi.github.io/chatgpt-conversation-exporter](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
 
-When you request a data export from ChatGPT, OpenAI delivers a ZIP archive containing one or more `conversations-NNN.json` files and a `chat.html` viewer. The HTML viewer lets you read your history but offers no way to extract specific conversations. This tool fills that gap.
+---
 
 ## Features
 
-- **Direct ZIP import** — drop the full ChatGPT export ZIP without unpacking it first
-- **Full-text search** — searches both conversation titles and message content, with hit highlighting
-- **Sorting** — by date (newest/oldest), alphabetically, or by message count
-- **Image filter** — show only conversations that contain images
-- **Live preview** — click any conversation to read it directly in the tool, including embedded images
-- **Selective export** — pick any subset of conversations
-- **Five export formats:**
+- **Import** ChatGPT data export (ZIP) or a single `conversations.json`
+- **Search** across all conversation titles and message content
+- **Sort** by date (newest/oldest), title (A–Z), or message count
+- **Filter** to conversations containing images (ZIP only)
+- **Preview** conversations inline with chat bubbles and embedded images
+- **Export** selected conversations in multiple formats:
 
-  | Format | Images | Output |
-  |--------|--------|--------|
-  | Markdown | — | `.md` file(s), multiple as ZIP |
-  | JSON | — | Clean JSON without ChatGPT's internal mapping structure |
-  | HTML | ✓ | Self-contained `.html` with all images embedded as Base64 |
-  | Markdown + ZIP | ✓ | `.md` with relative image links + `images/` folder |
-  | JSON + ZIP | ✓ | `conversations.json` + `images/` folder |
+| Format | Images | Description |
+|--------|--------|-------------|
+| Markdown | — | One `.md` per conversation; multiple → ZIP |
+| JSON | — | Clean JSON without internal metadata |
+| HTML | ✓ | Self-contained file with Base64-embedded images |
+| Markdown + ZIP | ✓ | `.md` files + `images/` folder in a ZIP |
+| JSON + ZIP | ✓ | `conversations.json` + `images/` folder in a ZIP |
 
-- **Image support** — user-uploaded photos and DALL·E generated images are extracted from the ZIP and matched to their conversation messages
-- **Export progress indicator** — visible progress overlay when exporting large selections
-- **100% client-side** — no server, no uploads, no tracking; your data never leaves the browser
+> **"Mit Bildern" exports** are only available when a ZIP file is loaded, since images are only present in the full data export.
 
-## Demo
+---
 
-👉 [Live version on GitHub Pages](https://mtedaldi.github.io/chatgpt-conversation-exporter/)
+## Privacy
 
-## Usage
+Everything runs locally in your browser. No data is uploaded anywhere.
 
-1. Download `index.html`
-2. Open it in any modern browser (Chrome, Firefox, Safari, Edge)
-3. Drop your ChatGPT export ZIP onto the drop zone — or select individual `conversations-*.json` files
-4. Use the search box, sort order, and image filter to find conversations
-5. Click a conversation title to preview it in the side panel
-6. Check the conversations you want to export and click the appropriate export button
+---
 
-No installation required. The tool loads [JSZip](https://stuk.github.io/jszip/) from CDN for ZIP support and Google Fonts for typography — both optional; the tool works offline for JSON-only imports. The [GitHub Pages build](https://mtedaldi.github.io/chatgpt-conversation-exporter/) embeds both automatically so no external requests are made at all.
+## Build & Deploy
 
-## Export formats
+The source `index.html` references JSZip via CDN. The CI build:
 
-### Markdown
-Each conversation becomes a `.md` file named after its title. Messages are rendered as `**Du**` / `**ChatGPT**` sections separated by horizontal rules. Multiple selections are bundled as a ZIP.
+1. Downloads JSZip from cdnjs
+2. Applies several sanitisation passes to make it safe for inline embedding:
+   - Simplifies the UMD wrapper to always assign `window.JSZip`
+   - Escapes raw newline bytes (`0x0a`) inside string literals (ZIP magic bytes)
+   - Escapes malformed `\x` sequences (JSZip's hex-escape builder)
+   - Escapes `</script>` occurrences to prevent premature script-block termination
+3. Embeds Google Fonts as Base64 (via [embed-google-fonts](https://github.com/mtedaldi/embed-google-fonts))
+4. Deploys to GitHub Pages
 
-### JSON
-Each conversation is exported as a clean object with `id`, `title`, `create_time`, `update_time`, and `messages` (containing `role`, `text`, `time`, and optionally `images`). Multiple selections are exported as a JSON array.
+---
 
-### HTML (with images)
-A self-contained `.html` file with all images embedded as Base64 data URIs. Opens in any browser, fully offline, no external dependencies.
+## Changelog
 
-### Markdown + ZIP (with images)
-A ZIP containing one subfolder per conversation: a `.md` file with relative `![alt](images/filename)` image links, and an `images/` subfolder with the actual image files.
+### v1.0.2
+- Fix `SyntaxError: malformed hexadecimal character escape sequence` in inlined JSZip (pretty() function)
+- Add all JSZip sanitisation steps to `deploy.yml` so the workflow is self-contained and reproducible
 
-### JSON + ZIP (with images)
-A ZIP containing `conversations.json` and an `images/` folder with all referenced image files.
+### v1.0.1
+- Fix `SyntaxError: string literal contains an unescaped line break` in inlined JSZip (ZIP magic bytes)
+- Fix JSZip UMD wrapper to always assign to `window` regardless of environment
+- Hide "Mit Bildern" export section until a ZIP file is loaded
+- Fix hardcoded error state in initial HTML
 
-## Image matching
+### v1.0.0
+- Initial release: import, search, filter, preview, export in 5 formats
 
-ChatGPT exports use two different internal asset pointer schemes:
+---
 
-- `file-service://file-<base58id>` — older uploaded files
-- `sediment://file_<hexprefix>` — newer uploads and DALL·E generated images
+## Development note
 
-The tool handles both automatically. DALL·E images are stored in a `user-{id}/` subfolder inside the ZIP and are detected by reading `user.json`.
-
-## Development
-
-Developed with the assistance of [Claude](https://claude.ai) by Anthropic. The concept, requirements, and direction are by the author; implementation was generated and iterated with AI assistance. Intentionally dependency-free for end users — a single `index.html` with vanilla JS.
-
-The published version on GitHub Pages is automatically built by a GitHub Actions workflow that inlines JSZip and embeds Google Fonts as Base64 using [embed-google-fonts](https://github.com/mtedaldi/embed-google-fonts), ensuring the deployed version makes zero external requests.
-
-Contributions and issues welcome via GitHub.
+This project was developed with AI assistance (Claude by Anthropic). All code has been reviewed and tested by the author.
 
 ## License
 
-[MIT](LICENSE)
+MIT

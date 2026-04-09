@@ -52,10 +52,77 @@ jobs:
           jszip_url = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
           print(f'Downloading JSZip from {jszip_url}')
           with urllib.request.urlopen(jszip_url, timeout=30) as r:
-              jszip_js = r.read().decode('utf-8')
-          print(f'  → {len(jszip_js)//1024} KB')
+              jszip_bytes = r.read()
+          print(f'  → {len(jszip_bytes)//1024} KB')
 
-          # Replace <script src="...jszip..."> with inline <script>
+          # --- Fix 1: simplify UMD wrapper to always assign to window ---
+          old_umd = (
+              b'!function(e){if("object"==typeof exports&&"undefined"!=typeof module)'
+              b'module.exports=e();else if("function"==typeof define&&define.amd)'
+              b'define([],e);else{("undefined"!=typeof window?window:'
+              b'"undefined"!=typeof global?global:'
+              b'"undefined"!=typeof self?self:this).JSZip=e()}}'
+          )
+          new_umd = b'!function(e){(window||self||this).JSZip=e()}'
+          if old_umd in jszip_bytes:
+              jszip_bytes = jszip_bytes.replace(old_umd, new_umd, 1)
+              print('  ✓ UMD wrapper simplified to always use window')
+          else:
+              print('  WARNING: UMD wrapper pattern not found — skipping simplification')
+
+          # --- Fix 2: escape raw 0x0a (newline) inside string literals ---
+          # JSZip embeds ZIP magic bytes as raw binary in JS strings.
+          # A raw 0x0a causes SyntaxError: "string literal contains an
+          # unescaped line break". Walk byte-by-byte and escape any raw \n
+          # inside string literals.
+          fixed = bytearray()
+          in_string = False
+          quote_char = None
+          i = 0
+          nl_fixed = 0
+          while i < len(jszip_bytes):
+              b = jszip_bytes[i]
+              if not in_string:
+                  fixed.append(b)
+                  if b in (0x22, 0x27):
+                      in_string = True
+                      quote_char = b
+              else:
+                  if b == 0x5c:          # backslash: copy escape + next char
+                      fixed.append(b)
+                      i += 1
+                      if i < len(jszip_bytes):
+                          fixed.append(jszip_bytes[i])
+                  elif b == quote_char:  # closing quote
+                      fixed.append(b)
+                      in_string = False
+                  elif b == 0x0a:        # raw newline inside string -> \n
+                      fixed.extend(b'\\n')
+                      nl_fixed += 1
+                  else:
+                      fixed.append(b)
+              i += 1
+          jszip_bytes = bytes(fixed)
+          print(f'  ✓ Raw newlines in string literals escaped: {nl_fixed}')
+
+          # --- Fix 3: escape malformed \x sequences ---
+          # JSZip's pretty() function builds "\x" + hex_digits by
+          # concatenating the literal string "\x" with computed hex.
+          # But "\x" alone (no following hex digits) is a SyntaxError.
+          # Fix: "\x" -> "\\x" so the string value is backslash+x.
+          bad_x = b'"\\x"+'
+          good_x = b'"\\\\x"+'
+          x_fixed = jszip_bytes.count(bad_x)
+          jszip_bytes = jszip_bytes.replace(bad_x, good_x)
+          print(f'  ✓ Malformed \\x escape sequences fixed: {x_fixed}')
+
+          # --- Fix 4: escape </script> to prevent premature script-end ---
+          jszip_js = jszip_bytes.decode('utf-8', errors='replace')
+          jszip_safe = jszip_js.replace('</script', '<\\/script')
+          script_escaped = jszip_safe.count('<\\/script')
+          print(f'  ✓ </script> occurrences escaped: {script_escaped}')
+
+          # Replace <script src="...jszip..."> with the sanitised inline block
           pattern = re.compile(
               r'<script\s+src=["\'][^"\']*jszip[^"\']*["\'][^>]*>\s*</script>',
               re.IGNORECASE
@@ -64,12 +131,8 @@ jobs:
           if count == 0:
               print('WARNING: No JSZip <script src> tag found in index.html')
           else:
-              # Escape </script> inside the JS — the browser HTML parser would
-              # otherwise terminate the script block prematurely.
-              jszip_safe = jszip_js.replace('</script', '<\\/script')
-              escaped = jszip_safe.count('<\\/script')
               html = pattern.sub(f'<script>\n{jszip_safe}\n</script>', html, count=1)
-              print(f'  ✓ JSZip inlined ({count} tag replaced, {escaped} </script> escaped)')
+              print(f'  ✓ JSZip inlined ({count} tag replaced)')
 
           html_path.write_text(html, encoding='utf-8')
           EOF
@@ -86,7 +149,6 @@ jobs:
           html = pathlib.Path('build/index.html').read_text(encoding='utf-8')
           issues = []
 
-          # Check for active external font requests (not mere URL mentions in embedded CSS)
           if re.search(r'<link\b[^>]*rel=["\']stylesheet["\'][^>]*fonts\.googleapis\.com', html, re.IGNORECASE) or \
              re.search(r'<link\b[^>]*fonts\.googleapis\.com[^>]*rel=["\']stylesheet["\']', html, re.IGNORECASE):
               issues.append('<link rel="stylesheet"> with Google Fonts URL still present')
@@ -97,6 +159,23 @@ jobs:
           if re.search(r'<script\s+src=["\'][^"\']*jszip[^"\']*["\']', html, re.IGNORECASE):
               issues.append('JSZip CDN <script src> still present')
 
+          # Verify no raw newlines inside JS string literals (SyntaxError guard)
+          jszip_start = html.find('JSZip v3.10.1')
+          jszip_end = html.find('</script>', jszip_start)
+          if jszip_start > 0:
+              jszip_block = html[jszip_start:jszip_end].encode('utf-8')
+              in_str = False; qc = None; esc = False
+              for i, b in enumerate(jszip_block):
+                  if esc: esc = False
+                  elif not in_str:
+                      if b in (0x22, 0x27): in_str = True; qc = b
+                  else:
+                      if b == 0x5c: esc = True
+                      elif b == qc: in_str = False
+                      elif b == 0x0a:
+                          issues.append(f'Raw newline inside JS string literal at JSZip offset {i}')
+                          break
+
           size_kb = len(html.encode('utf-8')) // 1024
           print(f'Output size: {size_kb} KB')
 
@@ -105,7 +184,7 @@ jobs:
                   print(f'FAIL: {i}', file=sys.stderr)
               sys.exit(1)
           else:
-              print('✓ No external font or CDN requests in output')
+              print('✓ No external requests, no string literal syntax errors in output')
           EOF
 
       - name: Upload Pages artifact
