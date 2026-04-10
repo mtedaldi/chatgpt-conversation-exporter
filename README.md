@@ -52,7 +52,9 @@ The source `index.html` references JSZip via CDN. The CI build:
 
 ### v1.0.2
 - Fix `SyntaxError: malformed hexadecimal character escape sequence` in inlined JSZip (pretty() function)
-- Add all JSZip sanitisation steps to `deploy.yml` so the workflow is self-contained and reproducible
+- Fix broken JSZip magic bytes: inlining must use binary-safe (latin-1) processing, not UTF-8, to preserve raw bytes
+- Restore CDN `<script src>` in source `index.html`; CI workflow does all sanitisation on raw bytes
+- `deploy.yml`: all four JSZip fixes now operate byte-level before any text decoding
 
 ### v1.0.1
 - Fix `SyntaxError: string literal contains an unescaped line break` in inlined JSZip (ZIP magic bytes)
